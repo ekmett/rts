@@ -55,10 +55,10 @@ namespace rts {
     struct execution_mask_scope {
       vec<bool,A> old_mask;
 
-      RTS_ALWAYS_INLINE execution_mask_scope() : old_mask(execution_mask<A>) {}
+      RTS_ALWAYS_INLINE execution_mask_scope() noexcept : old_mask(execution_mask<A>) {}
       execution_mask_scope(const execution_mask_scope & other) = delete;
       execution_mask_scope(execution_mask_scope && other) = delete;
-      RTS_ALWAYS_INLINE ~execution_mask_scope() { execution_mask<A> = old_mask; }
+      RTS_ALWAYS_INLINE ~execution_mask_scope() noexcept { execution_mask<A> = old_mask; }
     };
   }
 
