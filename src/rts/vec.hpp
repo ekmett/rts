@@ -28,7 +28,8 @@ namespace rts {
   // --------------------------------------------------------------------------------
 
   // no explicit simd
-  template <size_t N> struct generic {
+  template <size_t N> 
+  struct generic {
     static_assert(N <= 32, "vector width too wide");
     static_assert((N & (N-1)) == 0, "vector width is not a power of 2");
     static const int width = N;
@@ -109,37 +110,37 @@ namespace rts {
   template <class T, class A = default_isa> struct const_vptr;
   template <class T, class A = default_isa> struct vptr;
   template <class S, class T, class A> S & operator << (S & os, const vec<T,A> & v);
-  template <class T, class A> RTS_PURE constexpr const_vptr<T, A> operator + (std::ptrdiff_t j, const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr const_vptr<T, A> operator + (const_vptr<T,A> & lhs, std::ptrdiff_t j) noexcept;
-  template <class T, class A> RTS_PURE constexpr vptr<T, A> operator+(std::ptrdiff_t j, vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr vptr<T, A> operator+(vptr<T,A> & lhs, std::ptrdiff_t j) noexcept;
-  template <class T, class A> RTS_PURE constexpr std::ptrdiff_t operator - (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator == (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator == (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator == (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator != (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator != (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator != (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator < (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator < (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator < (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator <= (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator <= (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator <= (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator > (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator > (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator > (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator >= (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator >= (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
-  template <class T, class A> RTS_PURE constexpr bool operator >= (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
-  template <class T, class A> const_vptr<T, A> & operator++(const_vptr<T,A> & lhs) noexcept;
-  template <class T, class A> const_vptr<T, A> & operator++(const_vptr<T,A> & lhs, int) noexcept;
-  template <class T, class A> const_vptr<T, A> & operator--(const_vptr<T,A> & lhs) noexcept;
-  template <class T, class A> const_vptr<T, A> & operator--(const_vptr<T,A> & lhs, int) noexcept;
-  template <class T, class A> vptr<T, A> & operator++(vptr<T,A> & lhs) noexcept;
-  template <class T, class A> vptr<T, A> & operator++(vptr<T,A> & lhs, int) noexcept;
-  template <class T, class A> vptr<T, A> & operator--(vptr<T,A> & lhs) noexcept;
-  template <class T, class A> vptr<T, A> & operator--(vptr<T,A> & lhs, int) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr const_vptr<T, A> operator + (std::ptrdiff_t j, const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr const_vptr<T, A> operator + (const_vptr<T,A> & lhs, std::ptrdiff_t j) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr vptr<T, A> operator+(std::ptrdiff_t j, vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr vptr<T, A> operator+(vptr<T,A> & lhs, std::ptrdiff_t j) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr std::ptrdiff_t operator - (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator == (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator == (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator == (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator != (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator != (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator != (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator < (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator < (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator < (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator <= (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator <= (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator <= (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator > (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator > (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator > (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator >= (const const_vptr<T,A> & lhs, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator >= (std::nullptr_t, const const_vptr<T,A> & rhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE RTS_PURE constexpr bool operator >= (const const_vptr<T,A> & lhs, std::nullptr_t) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE const_vptr<T,A> & operator++(const_vptr<T,A> & lhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE const_vptr<T,A> & operator++(const_vptr<T,A> & lhs, int) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE const_vptr<T,A> & operator--(const_vptr<T,A> & lhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE const_vptr<T,A> & operator--(const_vptr<T,A> & lhs, int) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE vptr<T,A> & operator++(vptr<T,A> & lhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE vptr<T,A> & operator++(vptr<T,A> & lhs, int) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE vptr<T,A> & operator--(vptr<T,A> & lhs) noexcept;
+  template <class T, class A> RTS_ALWAYS_INLINE vptr<T,A> & operator--(vptr<T,A> & lhs, int) noexcept;
 
   // --------------------------------------------------------------------------------
   // * vector member references and pointers
@@ -152,13 +153,11 @@ namespace rts {
 
     const_vref() noexcept = delete;
     RTS_ALWAYS_INLINE constexpr const_vref(const const_vref & rhs) noexcept = default;
-    RTS_ALWAYS_INLINE constexpr const_vref(const_vref && rhs) noexcept = default;
-
+    RTS_ALWAYS_INLINE const_vref(const_vref && rhs) noexcept = default;
+    RTS_ALWAYS_INLINE constexpr const_vref(const vec<T, A> & v) noexcept : v(v), i(0) {}    
     RTS_ALWAYS_INLINE constexpr const_vref(const vec<T, A> & v, int i) noexcept : v(v), i(i) {
       assert(0 <= i && i < A::width);
     }
-
-    RTS_ALWAYS_INLINE constexpr const_vref(const vec<T, A> & v) noexcept : v(v), i(0) {}
 
     RTS_ALWAYS_INLINE RTS_PURE T get() const noexcept { return v.get(i); }
     RTS_ALWAYS_INLINE RTS_PURE operator T () const noexcept { return v.get(i); }
@@ -173,9 +172,8 @@ namespace rts {
 
     RTS_ALWAYS_INLINE constexpr const_vptr() noexcept = default;
     RTS_ALWAYS_INLINE constexpr const_vptr(const const_vptr & rhs) noexcept = default;
-    RTS_ALWAYS_INLINE constexpr const_vptr(const_vptr && rhs) noexcept = default;
+    RTS_ALWAYS_INLINE const_vptr(const_vptr && rhs) noexcept = default;
     RTS_ALWAYS_INLINE constexpr const_vptr(std::nullptr_t) noexcept : v(nullptr), i(0) {}
-
     RTS_ALWAYS_INLINE constexpr const_vptr(const vec<T, A> * v, int i) noexcept : v(v), i(i) {
       assert(0 <= i && i < A::width);
     }
@@ -241,7 +239,7 @@ namespace rts {
     RTS_ALWAYS_INLINE constexpr vptr() noexcept = default;
     RTS_ALWAYS_INLINE constexpr vptr(std::nullptr_t) noexcept : v(nullptr), i(0) {}
     RTS_ALWAYS_INLINE constexpr vptr(const vptr & rhs) noexcept = default;
-    RTS_ALWAYS_INLINE constexpr vptr(vptr && rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vptr(vptr && rhs) noexcept = default;
 
     RTS_ALWAYS_INLINE constexpr vptr(vec<T, A> * v, std::int32_t i = 0) noexcept : v(v), i(i) {
       assert(0 <= i && i < A::width); // invariant
