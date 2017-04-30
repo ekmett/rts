@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rts/generator.hpp"
+#include "rts/enumerators.hpp"
 #include "rts/attribute.hpp"
 #include "rts/chrono.hpp"
 #include "rts/cpu.hpp"

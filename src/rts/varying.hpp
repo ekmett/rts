@@ -50,26 +50,28 @@ namespace rts {
     return v.put(i,r);
   }
 
-  template <class A>
-  struct execution_mask_scope {
-    vec<bool,A> old_mask;
+  namespace detail {
+    template <class A>
+    struct execution_mask_scope {
+      vec<bool,A> old_mask;
 
-    RTS_ALWAYS_INLINE execution_mask_scope() : old_mask(execution_mask<A>) {}
-    execution_mask_scope(const execution_mask_scope & other) = delete;
-    execution_mask_scope(execution_mask_scope && other) = delete;
-    RTS_ALWAYS_INLINE ~execution_mask_scope() { execution_mask<A> = old_mask; }
-  };
+      RTS_ALWAYS_INLINE execution_mask_scope() : old_mask(execution_mask<A>) {}
+      execution_mask_scope(const execution_mask_scope & other) = delete;
+      execution_mask_scope(execution_mask_scope && other) = delete;
+      RTS_ALWAYS_INLINE ~execution_mask_scope() { execution_mask<A> = old_mask; }
+    };
+  }
 
   template <class T, class A>
   RTS_ALWAYS_INLINE void if_(const vec<bool,A> & v, T t) {
-    execution_mask_scope<A> scope;
+    detail::execution_mask_scope<A> scope;
     if (any(execution_mask<A> &= v))
       t();
   }
 
   template <class T, class F, class A>
   RTS_ALWAYS_INLINE void if_(const vec<bool,A> & v, T t, F f) {
-    execution_mask_scope<A> scope;
+    detail::execution_mask_scope<A> scope;
     if (any(execution_mask<A> &= v))
       t();
     if (any(execution_mask<A> = ~execution_mask<A> & scope.old_mask))
