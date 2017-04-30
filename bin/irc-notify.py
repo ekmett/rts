@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
-import os, random, socket, ssl, sys, time, base64, binascii
+import os, random, socket, ssl, sys, time, base64, binascii, json, urllib, urllib2
+
+def shorten(url):
+    gurl = 'http://goo.gl/api/url?url=%s' % urllib.quote(url)
+    req = urllib2.Request(gurl, data='')
+    req.add_header('User-Agent', 'toolbar')
+    results = json.load(urllib2.urlopen(req))
+    return results['short_url']
 
 protected_vars = vars().keys()
 
@@ -44,6 +51,8 @@ else:
     repo_url = "https://{repo_provider}.com/{repo_name}".format(**vars()).lower()
     commit_url = "{repo_url}/commit/{short_commit}".format(**vars())
     username = "{project_name}-appveyor".format(**vars())
+
+job_url = shorten(job_url)
 
 messages = []
 for msg in ' '.join(sys.argv[1:]).split(','):
