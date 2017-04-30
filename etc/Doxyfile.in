@@ -1965,7 +1965,10 @@ PREDEFINED = "__declspec(X)= " \
   "RTS_RETURNS_NONNULL= " \
   "RTS_PURE= " \
   "RTS_ALWAYS_INLINE= " \
-  "RTS_CONST= "
+  "RTS_CONST= " \
+  "__AVX__=1" \
+  "__AVX2__=1" \
+  "__RTM__=1" 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
