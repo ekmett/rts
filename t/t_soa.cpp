@@ -21,11 +21,11 @@ template <class A> void arch_test() {
 }
 
 TEST_CASE("soa", "[soa]") {
-  arch_test<generic<1>>();
+  arch_test<target::generic<1>>();
 #ifdef __AVX__
-  arch_test<avx_4>();
+  arch_test<target::avx_4>();
 #endif
 #ifdef __AVX2__
-  arch_test<avx2_8>();
+  arch_test<target::avx2_8>();
 #endif
 }

@@ -104,7 +104,7 @@ namespace rts {
     vector data[vsize];
 
     static const bool needs_last = (N & A::mask) != 0;
-    static RTS_PURE vec<bool,A> last_mask() noexcept { return vec<int,A>(N & ~ A::mask,step_tag); }
+    static RTS_PURE vec<bool,A> last_mask() noexcept { return vec<int,A>(N & ~ A::mask, detail::step_tag); }
 
     RTS_ALWAYS_INLINE constexpr soa() noexcept {}
     RTS_ALWAYS_INLINE constexpr soa(T t) noexcept {
