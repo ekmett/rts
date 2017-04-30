@@ -1,0 +1,6 @@
+[submodule "opt/Catch"]
+	path = opt/Catch
+	url = https://github.com/philsquared/Catch.git
+[submodule "opt/boost-cmake"]
+	path = opt/boost-cmake
+	url = https://github.com/Orphis/boost-cmake.git

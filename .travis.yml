@@ -1,0 +1,99 @@
+language: cpp
+sudo: false
+
+env:
+  global:
+    # TRAVIS_PASSWORD
+    - secure: "Ppy+RYxpoKOJal/eMw0VKFYwvSQtsV7Fcr8evvaorzepzS6GrvwrSiXycV3Be4uBhgX3fZhKNz+HW5rLhksWc5GK8t6+xXku6IlCVFR0oHLVzdmFvSAhK9HOVvsV+wJARO84xAaFYyr7KUzQiaO4zCNyEjRd/vl7dste9fDcNLKeKc7FXWGgfiNxuxe2lEwZGKNSstImWCnGh18wyE/MC7zip54YPuXm9QONhJU0HoLp4EdltFjcA2kc9xOwRWf4fUYkqssYPiZtFfBx3owKbZKvniQ/zz2IxEEkMuqZvN1bUyjdGaPvmTs5C57+EBUaX7JNHiClkDsj0W4pRbv0Y58BYcRsMVDMtzQK+AX4uBMtHHFPG30W3/kwh75EePWabD1gUvozZaisy6mxmqZtXuNFi8hnzq+Vt2S/ne/BpA7OnLmiUMMZ/pwHEV3KyyqSB86L0hHraiC5srgxUXgubnFYMSbaecCMVr1+7WJplyTXExjzSH2cf4vOjyuNpp3vqyg46CPlSki37sSgcM12SmR0Je/WwnH0bFffE9XDfpD7tFrgI14M3wbx44D/Jzd7MtOyKAMx95t3M/AI5V8nKVKjjd1f8tONTja4F4X6SperKnpGz2s6A7GDsmHlDSjMuHTkt5oeTOOJN3pvZ2xN8IUBrfvJ2Dq/M22S3gtA5vQ="
+
+git:
+ depth: 3
+
+matrix:
+ include:
+ - os: osx
+   compiler: clang++
+   env: CMAKE_OPTIONS="-DENABLE_AVX:BOOL=OFF -DENABLE_AVX2:BOOL=OFF" BUILD_OPTIONS="-j 4"
+   osx_image: xcode8.3
+
+ - os: linux
+   compiler: g++
+   dist: trusty
+   env: COMPILER=g++-6 BUILD_OPTIONS="-j 4" BUILD="make"
+   addons:
+    apt:
+     packages:
+     - doxygen
+     - g++-6
+     - libbz2-1.0
+     - libstdc++6
+     - libz1
+     sources:
+     - ubuntu-toolchain-r-test
+
+ - os: linux
+   compiler: g++
+   dist: trusty
+   env: COMPILER=g++-6 CMAKE_OPTIONS="-GNinja" BUILD="ninja"
+   addons:
+    apt:
+     packages:
+     - doxygen
+     - g++-6
+     - libbz2-1.0
+     - libstdc++6
+     - libz1
+     - ninja-build
+     sources:
+     - ubuntu-toolchain-r-test
+
+ - os: linux
+   compiler: clang++
+   dist: trusty
+   env: COMPILER=clang++-4.0 CMAKE_OPTIONS="-DENABLE_DOCS:BOOL=OFF" BUILD_OPTIONS="-j 4"
+   addons:
+    apt:
+     packages:
+     - clang-4.0
+     - lld-4.0
+     sources:
+     - ubuntu-toolchain-r-test
+     - llvm-toolchain-trusty-4.0
+
+cache:
+ directories:
+ - opt/cmake
+ - opt/downloads
+  
+before_install:
+- | 
+  if [[ ! -z $BUILD ]]; then
+    export TRAVIS_BUILD_EXTRA=" $BUILD"
+  else
+    export TRAVIS_BUILD_EXTRA=""
+  fi
+- . bin/travis.sh
+- rts_trap rts_before_install
+
+install:
+- rts_trap rts_install
+
+script:
+- rts_trap rts_script
+
+notifications:
+ irc:
+  channels:
+  - "chat.freenode.net#thc"
+  nick: rts-travis
+  password:
+  - secure: "eQ4Gz3lfzihjSH5hnsKCtXgGTR+9wmkhiAhSllnBh6GvqqRGvbFh142g3rID8udsAJXpNVK1tp7tH7GLa02YVzELGZIhwKIiByt7p+fBSgFsKriyiQNONcBSC6trnglUKEyF5uwLBGI58ByG2KY0uFWyDXMkguNbO3J7yMLBqh0b6b4dhtabXHafXKc9YVHylZPhRhogiv3KyvTW8VT/Qz3lgzgVpwzMnZyMRq04MmOuxD+7H5f4LEgJ+ICaI5sEsLQekxk2euykPTNou+NSwOadERgAO60olA87Iv3vYsld5V/QJdyeDV8hv8FJdVl02hDrWRlaQXDzgUmREdQYFO6LxVYN5641ncX+msD9qEax7hAl4/Tl5LSkPDUNf+824kTvq991lvYqRM7iJanl1Rzss4LLrpmFkmViB3CKhWyBeUDY+MzJRGfcaTe0lpzfSzUKmcPfAEbtWfGF6iumoUJxxsdWxil3zBiG1l34obo3C7zo2SfhYHqhjcvG67SubXeJ6V6gXbnfDVF0dErvP3RGkCPqIiJv13J5zZIfXsFimD4KSM3afQz72DeOFk0H2pltaqxNav7j5lpWY5ERgsUbOc+p3mu7LtnU0awgSdhv+cyNkaPIOiHHAunZadqoe9mbOWsa8qC40JG540lQRFNKzIeB1lwbeOHJQt0NolU="
+  skip_join: true
+  template:
+  - "\x0313rts\x0f/\x0306%{branch}\x0f \x0314%{commit}\x0f %{message} \x0302\x1f%{build_url}\x0f"
+
+after_success:
+- travis_retry python ${TRAVIS_BUILD_DIR}/bin/irc-notify.py "{color_code}13rts{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{job_number}{color_off} {os_name} {cxx}{build_extra} {color_code}03passed{color_off} {color_code}02{underline}{job_url}{color_off}"
+
+after_failure:
+- travis_retry python ${TRAVIS_BUILD_DIR}/bin/irc-notify.py "{color_code}13rts{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{job_number}{color_off} {os_name} {cxx}{build_extra} {color_code}04failed{color_off} {color_code}02{underline}{job_url}{color_off}"
