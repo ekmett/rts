@@ -5,6 +5,8 @@
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <tuple>
+#include <utility>
 #include "cpu.hpp"
 #include "x86.hpp"
 
@@ -1186,6 +1188,74 @@ namespace rts {
     RTS_ALWAYS_INLINE operator vec<T,A> () { return load(pointers); }
   }; // vec<T&,A>
 
+
+  namespace detail {
+    template <class F, size_t... Is>
+    RTS_ALWAYS_INLINE constexpr auto index_apply_impl(F f, std::index_sequence<Is...>) {
+      return f(integral_constant<size_t, Is> {}...);
+    }
+
+    template <size_t N, class F>
+    RTS_ALWAYS_INLINE constexpr auto index_apply(F f) {
+      return index_apply_impl(f, std::make_index_sequence<N>{});
+    }
+
+    template <size_t I, typename T, typename V> 
+    RTS_ALWAYS_INLINE void put1(T & t, int i, const V & v) {
+      std::get<I>(t).put(i,std::get<I>(v));
+    }
+  }
+
+  template <class A, class ... Ts>
+  struct vec<std::tuple<Ts...>, A> {
+    using arch = A;
+    using value_type = std::tuple<Ts...>;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using reference = detail::vref<value_type,arch>;
+    using const_reference = detail::const_vref<value_type,arch>;
+    using pointer = detail::vptr<value_type,arch>;
+    using const_pointer = detail::const_vptr<value_type,arch>;
+    using iterator = detail::vptr<value_type,arch>;
+    using const_iterator = detail::const_vptr<value_type,arch>;
+
+    std::tuple<vec<Ts,A>...> data;
+
+    RTS_ALWAYS_INLINE constexpr vec() noexcept = default;
+    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
+    RTS_ALWAYS_INLINE constexpr vec(std::tuple<Ts...> b) noexcept : data () {}
+
+    RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
+
+    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return const_iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return const_iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return const_iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return const_iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return begin()[i]; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
+    
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept {
+      return detail::index_apply<std::tuple_size<value_type>{}>(
+        [&](auto... Is) { return std::make_tuple(std::get<Is>(t).get(i)...); }
+      );
+    }
+
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept {
+      return detail::index_apply<std::tuple_size<value_type>{}>(
+        [&](auto... Is) { return std::make_tuple(std::get<Is>(t).get(i)...); }
+      );
+    }
+
+    RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept {
+      detail::index_apply<std::tuple_size<value_type>{}>(
+        [&](auto... Is) { auto l = { detail::put1<Is>(data,i,v); }; }
+      );
+    }
+  };
 
   template <class T, class A>
   RTS_ALWAYS_INLINE RTS_PURE const vec<T&,A> operator * (const vec<T*,A> & ps) noexcept {
