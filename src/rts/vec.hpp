@@ -1190,17 +1190,17 @@ namespace rts {
 
 
   namespace detail {
-    template <class F, size_t... Is>
+    template <class F, std::size_t... Is>
     RTS_ALWAYS_INLINE constexpr auto index_apply_impl(F f, std::index_sequence<Is...>) {
-      return f(integral_constant<size_t, Is> {}...);
+      return f(std::integral_constant<std::size_t, Is> {}...);
     }
 
-    template <size_t N, class F>
+    template <std::size_t N, class F>
     RTS_ALWAYS_INLINE constexpr auto index_apply(F f) {
       return index_apply_impl(f, std::make_index_sequence<N>{});
     }
 
-    template <size_t I, typename T, typename V> 
+    template <std::size_t I, typename T, typename V> 
     RTS_ALWAYS_INLINE void put1(T & t, int i, const V & v) {
       std::get<I>(t).put(i,std::get<I>(v));
     }
@@ -1240,19 +1240,19 @@ namespace rts {
     
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept {
       return detail::index_apply<std::tuple_size<value_type>{}>(
-        [&](auto... Is) { return std::make_tuple(std::get<Is>(t).get(i)...); }
+        [&](auto... Is) { return std::make_tuple(std::get<Is>(data).get(i)...); }
       );
     }
 
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept {
       return detail::index_apply<std::tuple_size<value_type>{}>(
-        [&](auto... Is) { return std::make_tuple(std::get<Is>(t).get(i)...); }
+        [&](auto... Is) { return std::make_tuple(std::get<Is>(data).get(i)...); }
       );
     }
 
     RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept {
       detail::index_apply<std::tuple_size<value_type>{}>(
-        [&](auto... Is) { auto l = { detail::put1<Is>(data,i,v), ... }; }
+        [&](auto... Is) { auto l = { detail::put1<Is>(data,i,v)... }; }
       );
     }
   };
