@@ -1306,7 +1306,7 @@ namespace rts {
 
     RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept {
       detail::index_apply<std::tuple_size<value_type>{}>(
-        [&](auto... Is) { auto l = { detail::put1<Is>(data,i,v)... }; }
+        [&](auto... Is) { RTS_UNUSED auto l = { detail::put1<Is>(data,i,v)... }; }
       );
     }
 
