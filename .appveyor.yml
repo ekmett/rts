@@ -38,7 +38,7 @@ install:
 - cmd: choco install doxygen.portable
 - ps: |
     # Download Coverity Build Tool if we are doing scheduled build.
-    if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64") {
+    if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64" -and $env:CONFIGURATION -eq "Debug") {
       "Downloading coverity"
       Invoke-WebRequest `
         -Uri "https://scan.coverity.com/download/cxx/win64" `
@@ -73,7 +73,7 @@ build_script:
       "/l:C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll", 
       "/p:Platform=$env:PLATFORM"
       )
-    if ($env:APPVEYOR_SCHEDULED_BUILD -ne "True" -or $env:PLATFORM -ne "x64") {
+    if ($env:APPVEYOR_SCHEDULED_BUILD -ne "True" -or $env:PLATFORM -ne "x64" -or $env:CONFIGURATION -ne "Debug") {
       & $buildCmd $buildArgs
       return # exit script
     }
