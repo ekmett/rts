@@ -1226,7 +1226,7 @@ namespace rts {
     RTS_ALWAYS_INLINE constexpr vec(const std::pair<S,T> & that) noexcept : first(that.first), second(that.second) {}
 
     template <typename U, typename V>
-    RTS_ALWAYS_INLINE explicit constexpr vec(const std::pair<U,V> & b) noexcept : first(that.first), second(that.second) {}
+    RTS_ALWAYS_INLINE explicit constexpr vec(const std::pair<U,V> & that) noexcept : first(that.first), second(that.second) {}
 
     RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
