@@ -147,7 +147,19 @@ test_script:
 - cmd: ctest --build-config %configuration% --parallel 4 --output-on-failure
 
 on_success:
-- "python c:/project/rts/bin/irc-notify.py {color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} {job_name} {color_code}03passed{color_off} {color_code}02{underline}{job_url}{color_off}"
+- ps: |
+  if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64" -and $env:CONFIGURATION -eq "Debug") {
+    $mode = "scan"
+  } else {
+    $mode = "build"
+  }
+  & python c:/project/rts/bin/irc-notify.py "{color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} $mode {job_name} {color_code}03passed{color_off} {color_code}02{underline}{job_url}{color_off}"
 
 on_failure:
-- "python c:/project/rts/bin/irc-notify.py {color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} {job_name} {color_code}04failed{color_off} {color_code}02{underline}{job_url}{color_off}"
+- ps: |
+  if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64" -and $env:CONFIGURATION -eq "Debug") {
+    $mode = "scan"
+  } else {
+    $mode = "build"
+  }
+  & python c:/project/rts/bin/irc-notify.py "{color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} $mode {job_name} {color_code}04failed{color_off} {color_code}02{underline}{job_url}{color_off}"
