@@ -1206,6 +1206,60 @@ namespace rts {
     }
   }
 
+  template <class S, class T, class A>
+  struct vec<std::pair<S,T>,A> {
+    using arch = A;
+    using value_type = std::pair<S,T>;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using reference = detail::vref<value_type,arch>;
+    using const_reference = detail::const_vref<value_type,arch>;
+    using pointer = detail::vptr<value_type,arch>;
+    using const_pointer = detail::const_vptr<value_type,arch>;
+    using iterator = detail::vptr<value_type,arch>;
+    using const_iterator = detail::const_vptr<value_type,arch>;
+
+    vec<S,A> first;
+    vec<T,A> second;
+
+    RTS_ALWAYS_INLINE constexpr vec() noexcept = default;
+    RTS_ALWAYS_INLINE constexpr vec(const std::pair<S,T> & that) noexcept : first(that.first), second(that.second) {}
+
+    template <typename U, typename V>
+    RTS_ALWAYS_INLINE explicit constexpr vec(const std::pair<U,V> & b) noexcept : first(that.first), second(that.second) {}
+
+    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
+
+    RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
+
+    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return const_iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return const_iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return const_iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return const_iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return begin()[i]; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
+    
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept { return make_pair(first.get(i), second.get(i)); }
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept { return make_pair(first.get(i),second.get(i)); }
+
+    RTS_ALWAYS_INLINE void put(int i, const std::pair<S,T> & v) noexcept {
+      first.put(i, v.first);
+      second.put(i,v.second);
+    }
+
+    RTS_ALWAYS_INLINE void swap(vec & that) noexcept {
+      std::swap(first,that.first);
+      std::swap(second,that.second);
+    }
+  };
+
+
+
+
   template <class A, class ... Ts>
   struct vec<std::tuple<Ts...>, A> {
     using arch = A;
@@ -1255,7 +1309,12 @@ namespace rts {
         [&](auto... Is) { auto l = { detail::put1<Is>(data,i,v)... }; }
       );
     }
+
+    RTS_ALWAYS_INLINE void swap(vec & that) noexcept {
+      std::swap(data,that.data);
+    }
   };
+
 
   template <class T, class A>
   RTS_ALWAYS_INLINE RTS_PURE const vec<T&,A> operator * (const vec<T*,A> & ps) noexcept {
