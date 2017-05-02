@@ -1384,7 +1384,7 @@ namespace rts {
 
 #define RTS_OP(op) \
   template <class T, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE auto operator op (const vec<T, A> & l) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l) noexcept { \
     vec<decltype(op l.get(0)),A> result; \
     for (int i =0;i<A::width;++i) result.put(i,op l.get(i)); \
     return result; \
@@ -1399,19 +1399,19 @@ namespace rts {
 
 #define RTS_BINOP(op) \
   template <class T, class U, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE auto operator op (const vec<T, A> & l, const vec<U,A> & r) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, const vec<U,A> & r) noexcept { \
     vec<decltype(l.get(0) op r.get(0)), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l.get(i) op r.get(i)); \
     return result; \
   } \
   template <class T, class U, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE auto operator op (const vec<T, A> & l, U r) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, U r) noexcept { \
     vec<decltype(l.get(0) op r), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l.get(i) op r); \
     return result; \
   } \
   template <class T, class U, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE auto operator op (T l, const vec<U, A> & r) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (T l, const vec<U, A> & r) noexcept { \
     vec<decltype(l op r.get(0)), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l op r.get(i)); \
     return result; \
@@ -1690,7 +1690,7 @@ namespace rts {
   #define RTS_UNARY_MATH(fun) \
     using std::fun; \
     template <class T, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<T,A> & v) RTS_MATH_NOEXCEPT { \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const vec<T,A> & v) RTS_MATH_NOEXCEPT { \
       vec<decltype(fun(std::declval<T>)),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(v[i]); \
@@ -1700,7 +1700,7 @@ namespace rts {
   #define RTS_BINARY_MATH(fun) \
     using std::fun; \
     template <class U, class V, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<U,A> & u, const vec<V,A> & v) RTS_MATH_NOEXCEPT { \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const vec<U,A> & u, const vec<V,A> & v) RTS_MATH_NOEXCEPT { \
       vec<decltype(fun(std::declval<U>,std::declval<V>)),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(u[i],v[i]); \

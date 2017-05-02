@@ -218,8 +218,8 @@ namespace rts {
         S base; \
         RTS_ALWAYS_INLINE constexpr soa_unary_math_##fun(const S & base) noexcept : base(base) {} \
         RTS_ALWAYS_INLINE soa_unary_math_##fun(S && base) noexcept : base(std::move(base)) {} \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
       }; \
     } \
     template <class S, std::size_t N, class A> \
@@ -240,8 +240,8 @@ namespace rts {
         T rhs; \
         RTS_ALWAYS_INLINE constexpr soa_binary_math_##fun(const S & lhs, const T & rhs) noexcept : lhs(lhs), rhs(rhs) {} \
         RTS_ALWAYS_INLINE soa_binary_math_##fun(S && lhs, T && rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {} \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i),rhs.vget(i)); } \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i, mask),rhs.vget(i, mask)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i),rhs.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i, mask),rhs.vget(i, mask)); } \
       }; \
     } \
     template <class S, class T, std::size_t N, class A> \
