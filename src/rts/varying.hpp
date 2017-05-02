@@ -136,4 +136,41 @@ namespace std {
   struct tuple_element<I, rts::varying<T,A> > {
     using type = T;
   };
+
+  template <class T, class A>
+  struct numeric_limits<rts::varying<T,A>> {
+    using base_limits = std::numeric_limits<rts::vec<T,A>>;
+    static constexpr bool is_specialized = true;
+    static constexpr bool is_signed = base_limits::is_signed; // ?
+    static constexpr bool is_integer = base_limits::is_integer; // ?
+    static constexpr bool is_exact = base_limits::is_exact;
+    static constexpr bool has_infinity = base_limits::has_infinity;
+    static constexpr bool has_quiet_NaN = base_limits::has_quiet_NaN;
+    static constexpr bool has_signaling_NaN = base_limits::has_signaling_NaN;
+    static constexpr std::float_denorm_style has_denorm = base_limits::has_denorm;
+    static constexpr bool has_denorm_loss = base_limits::has_denorm_loss;
+    static constexpr std::float_round_style round_style = base_limits::round_style;
+    static constexpr bool is_iec559 = base_limits::iec559;
+    static constexpr bool is_bounded = base_limits::is_bounded;
+    static constexpr bool is_modulo = base_limits::is_modulo;
+    static constexpr int digits = base_limits::digits;
+    static constexpr int digits10 = base_limits::digits10;
+    static constexpr int max_digits10 = base_limits::max_digits10;
+    static constexpr int radix = base_limits::radix;
+    static constexpr int min_exponent = base_limits::min_exponent;
+    static constexpr int max_exponent = base_limits::max_exponent;
+    static constexpr int min_exponent10 = base_limits::min_exponent10;
+    static constexpr int max_exponent10 = base_limits::max_exponent10;
+    static constexpr bool traps = base_limits::traps;
+    static constexpr bool tinyness_before = base_limits::tinyness_before;
+    static RTS_MATH_PURE constexpr rts::varying<T,A> max() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::max()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> min() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::min()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> lowest() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::lowest()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> epsilon() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::epsilon()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> round_error() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::round_error()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> infinity() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::infinity()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> quiet_NaN() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::quiet_NaN()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> signaling_NaN() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::signaling_NaN()); }
+    static RTS_MATH_PURE constexpr rts::varying<T,A> denorm_min() RTS_MATH_NOEXCEPT { return rts::varying<T,A>(base_limits::signaling_NaN()); }
+  };
 } // namespace std
