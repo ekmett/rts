@@ -1702,7 +1702,7 @@ namespace std {
   #define RTS_UNARY_MATH(fun) \
     template <class T, class A> \
     RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const rts::vec<T,A> & v) RTS_MATH_NOEXCEPT { \
-      rts::vec<decltype(fun(declval<const T &>)),A> result; \
+      rts::vec<decltype(fun(T())),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(v[i]); \
       return result; \
@@ -1711,7 +1711,7 @@ namespace std {
     using std::fun; \
     template <class U, class V, class A> \
     RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<U,A> & u, const rts::vec<V,A> & v) RTS_MATH_NOEXCEPT { \
-      rts::vec<decltype(fun(std::declval<const U &>,std::declval<const V &>)),A> result; \
+      rts::vec<decltype(fun(U(),V())),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(u[i],v[i]); \
       return result; \

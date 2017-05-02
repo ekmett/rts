@@ -19,7 +19,9 @@ template <class A> void arch_test() {
       vec<double,A> d(0.0), e(1.0);
       auto r = d + e;
       const std::uint32_t m = A::width_mask;
-      REQUIRE(movemask(r == e) == m);      
+      REQUIRE(movemask(r == e) == m);
+      REQUIRE(movemask(std::sin(e) == rts::vec<double,A>(std::sin(1.0))) == m);
+      REQUIRE(movemask(std::atan2(e,e) == rts::vec<double,A>(std::atan2(1.0,1.0))) == m);
   }
 }
 
