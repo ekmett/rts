@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN
+#include "rts/platform.hpp"
 #include "catch.hpp"
 #include "rts.hpp"
 #include "type.hpp"

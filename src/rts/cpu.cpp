@@ -1,6 +1,6 @@
 #include "cpu.hpp"
 #include "attribute.hpp"
-
+#include "platform.hpp"
 #include <stdio.h>
 
 #if defined(_WIN32) || defined(_WIN64)

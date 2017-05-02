@@ -1,3 +1,7 @@
+#pragma once
+
+#include "platform.hpp"
+
 #include <boost/context/all.hpp>
 #include <exception>
 #include <memory>

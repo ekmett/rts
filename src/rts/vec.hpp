@@ -3,6 +3,7 @@
 #include <immintrin.h>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <tuple>
@@ -1206,6 +1207,8 @@ namespace rts {
     }
   }
 
+  // TODO: vec<std::complex<T>,A>
+
   template <class S, class T, class A>
   struct vec<std::pair<S,T>,A> {
     using arch = A;
@@ -1623,6 +1626,43 @@ namespace rts {
     }
   }
 
+  #if math_errhandling & MATH_ERREXCEPT
+    #define RTS_MATH_EXCEPT 
+  #else
+    #define RTS_MATH_EXCEPT noexcept
+  #endif
+
+  #if math_errhandling & MATH_ERRNO
+    #define RTS_MATH_PURE 
+  #else
+    #define RTS_MATH_PURE RTS_PURE
+  #endif
+
+  #define RTS_UNARY_MATH(fun) \
+    using std::fun; \
+    template <class T, class A> \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<T,A> & v) RTS_MATH_EXCEPT { \
+      vec<decltype(fun(std::declval<T>)),A> result; \
+      for (int i=0;i<A::width;++i) \
+        result[i] = fun(v[i]); \
+      return result; \
+    }
+
+  #define RTS_BINARY_MATH(fun) \
+    using std::fun; \
+    template <class U, class V, class A> \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<U,A> & u, const vec<V,A> & v) RTS_MATH_EXCEPT { \
+      vec<decltype(fun(std::declval<U>,std::declval<V>)),A> result; \
+      for (int i=0;i<A::width;++i) \
+        result[i] = fun(u[i],v[i]); \
+      return result; \
+    }
+  
+  #include "x-math.hpp"
+
+  #undef RTS_UNARY_MATH
+  #undef RTS_BINARY_MATH
+
   using std::get;
   using std::tuple_size;
   using std::tuple_element;
@@ -1673,5 +1713,46 @@ namespace std {
     using value_type = T;
     using reference_type = typename rts::vec<T&,A>::reference;
     using iterator_category = random_access_iterator_tag;
+  };
+
+  template <class T, class A>
+  struct numeric_limits<rts::vec<T,A>> {
+    using base_limits = std::numeric_limits<T>;
+
+    static constexpr bool is_specialized = true;
+    
+    static constexpr bool is_signed = base_limits::is_signed; // ?
+    static constexpr bool is_integer = base_limits::is_integer; // ?
+
+    static constexpr bool is_exact = base_limits::is_exact;
+    static constexpr bool has_infinity = base_limits::has_infinity;
+    static constexpr bool has_quiet_NaN = base_limits::has_quiet_NaN;
+    static constexpr bool has_signaling_NaN = base_limits::has_signaling_NaN;
+    static constexpr std::float_denorm_style has_denorm = base_limits::has_denorm;
+    static constexpr bool has_denorm_loss = base_limits::has_denorm_loss;
+    static constexpr std::float_round_style round_style = base_limits::round_style;
+    static constexpr bool is_iec559 = base_limits::iec559;
+    static constexpr bool is_bounded = base_limits::is_bounded;
+    static constexpr bool is_modulo = base_limits::is_modulo;
+    static constexpr int digits = base_limits::digits;
+    static constexpr int digits10 = base_limits::digits10;
+    static constexpr int max_digits10 = base_limits::max_digits10;
+    static constexpr int radix = base_limits::radix;
+    static constexpr int min_exponent = base_limits::min_exponent;
+    static constexpr int max_exponent = base_limits::max_exponent;
+    static constexpr int min_exponent10 = base_limits::min_exponent10;
+    static constexpr int max_exponent10 = base_limits::max_exponent10;
+    static constexpr bool traps = base_limits::traps;
+    static constexpr bool tinyness_before = base_limits::tinyness_before;
+
+    static RTS_MATH_PURE constexpr rts::vec<T,A> max() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::max()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> min() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::min()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> lowest() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::lowest()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> epsilon() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::epsilon()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> round_error() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::round_error()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> infinity() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::infinity()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> quiet_NaN() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::quiet_NaN()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> signaling_NaN() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> denorm_min() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
   };
 } // namespace std
