@@ -3,7 +3,7 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 
 function(test exe)
   add_executable(${exe} ${exe}.cpp)
-  target_link_libraries(${exe} rts ${Boost_LIBRARIES} ${Event_LIBRARIES})
+  target_link_libraries(${exe} rts ${MATH_LIBRARIES} ${Boost_LIBRARIES} ${Event_LIBRARIES})
   #if(USE_COVERAGE) # and gcc
     #target_link_libraries(${exe} gcov)
   #endif()
