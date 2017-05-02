@@ -3,6 +3,7 @@
 #include <immintrin.h>
 #include <array>
 #include <cassert>
+#include <complex>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -1207,7 +1208,55 @@ namespace rts {
     }
   }
 
-  // TODO: vec<std::complex<T>,A>
+  template <class T, class A>
+  struct vec<std::complex<T>,A> {
+    using arch = A;
+    using value_type = std::complex<T>;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using reference = detail::vref<value_type,arch>;
+    using const_reference = detail::const_vref<value_type,arch>;
+    using pointer = detail::vptr<value_type,arch>;
+    using const_pointer = detail::const_vptr<value_type,arch>;
+    using iterator = detail::vptr<value_type,arch>;
+    using const_iterator = detail::const_vptr<value_type,arch>;
+    
+    vec<T,A> real;
+    vec<T,A> imag;
+
+    RTS_ALWAYS_INLINE constexpr vec(const vec<T,A> & re = vec<T,A>(), const vec<T,A> & im = vec<T,A>()) : real(re), imag(im) {}
+    RTS_ALWAYS_INLINE explicit constexpr vec(const std::complex<T> & that) noexcept : real(that.real), imag(that.imag) {}
+    RTS_ALWAYS_INLINE constexpr vec(const vec & that) noexcept = default;
+    RTS_ALWAYS_INLINE explicit vec(vec && rhs) noexcept = default;
+
+    template <typename U>
+    RTS_ALWAYS_INLINE explicit constexpr vec(const vec<U,A> & that) noexcept : real(that.real), imag(that.imag) {}
+
+    RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
+
+    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return const_iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return const_iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return const_iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return const_iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return begin()[i]; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
+    
+    RTS_ALWAYS_INLINE RTS_PURE constexpr std::complex<T> get(int i) noexcept { return std::complex<T>(first.get(i), second.get(i)); }
+    RTS_ALWAYS_INLINE RTS_PURE constexpr std::complex<T> get(int i) const noexcept { return std::complex<T>(first.get(i),second.get(i)); }
+
+    RTS_ALWAYS_INLINE void put(int i, const std::complex<T> & v) noexcept {
+      real.put(i,v.real);
+      imag.put(i,v.imag);
+    }
+
+    RTS_ALWAYS_INLINE void swap(vec & that) noexcept {
+      std::swap(real,that.real);
+      std::swap(imag,that.imag);
+    }
+  };
 
   template <class S, class T, class A>
   struct vec<std::pair<S,T>,A> {
