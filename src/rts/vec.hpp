@@ -1233,7 +1233,7 @@ namespace rts {
     RTS_ALWAYS_INLINE explicit constexpr vec(const vec<U,A> & that) noexcept : real(that.real), imag(that.imag) {}
 
     RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
-    RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
+    RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;    
 
     RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return iterator(this); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return iterator(this+1); }
@@ -1676,9 +1676,9 @@ namespace rts {
   }
 
   #if math_errhandling & MATH_ERREXCEPT
-    #define RTS_MATH_EXCEPT 
+    #define RTS_MATH_NOEXCEPT 
   #else
-    #define RTS_MATH_EXCEPT noexcept
+    #define RTS_MATH_NOEXCEPT noexcept
   #endif
 
   #if math_errhandling & MATH_ERRNO
@@ -1690,7 +1690,7 @@ namespace rts {
   #define RTS_UNARY_MATH(fun) \
     using std::fun; \
     template <class T, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<T,A> & v) RTS_MATH_EXCEPT { \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<T,A> & v) RTS_MATH_NOEXCEPT { \
       vec<decltype(fun(std::declval<T>)),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(v[i]); \
@@ -1700,7 +1700,7 @@ namespace rts {
   #define RTS_BINARY_MATH(fun) \
     using std::fun; \
     template <class U, class V, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<U,A> & u, const vec<V,A> & v) RTS_MATH_EXCEPT { \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const vec<U,A> & u, const vec<V,A> & v) RTS_MATH_NOEXCEPT { \
       vec<decltype(fun(std::declval<U>,std::declval<V>)),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(u[i],v[i]); \
@@ -1794,14 +1794,14 @@ namespace std {
     static constexpr bool traps = base_limits::traps;
     static constexpr bool tinyness_before = base_limits::tinyness_before;
 
-    static RTS_MATH_PURE constexpr rts::vec<T,A> max() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::max()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> min() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::min()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> lowest() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::lowest()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> epsilon() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::epsilon()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> round_error() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::round_error()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> infinity() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::infinity()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> quiet_NaN() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::quiet_NaN()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> signaling_NaN() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> denorm_min() RTS_MATH_EXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> max() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::max()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> min() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::min()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> lowest() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::lowest()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> epsilon() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::epsilon()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> round_error() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::round_error()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> infinity() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::infinity()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> quiet_NaN() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::quiet_NaN()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> signaling_NaN() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> denorm_min() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
   };
 } // namespace std

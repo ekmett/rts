@@ -64,12 +64,12 @@ namespace rts {
   }
 
   #define RTS_UNARY_MATH(fun) \
-    template <class T, class A> RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const varying<T,A> & v) RTS_MATH_EXCEPT { \
+    template <class T, class A> RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const varying<T,A> & v) RTS_MATH_NOEXCEPT { \
       return make_varying(fun(vec<T,A>(v))); \
     }
 
   #define RTS_BINARY_MATH(fun) \
-    template <class U, class V, class A> RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const varying<U,A> & u, const varying<V,A> & v) RTS_MATH_EXCEPT { \
+    template <class U, class V, class A> RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const varying<U,A> & u, const varying<V,A> & v) RTS_MATH_NOEXCEPT { \
       return make_varying(fun(vec<U,A>(v), vec<V,A>(v))); \
     }
 
