@@ -23,6 +23,9 @@ namespace rts {
     template <typename ... Args>
     RTS_ALWAYS_INLINE constexpr varying(Args ... args) noexcept : data(std::forward(args)...) {}
 
+    explicit RTS_ALWAYS_INLINE varying(const vector & data) : data(data) {}
+    explicit RTS_ALWAYS_INLINE varying(vector && data) : data(std::move(data)) {}
+
     RTS_ALWAYS_INLINE varying(varying && rhs) : data(std::move(rhs.data)) {}
 
     template <typename U>
@@ -42,6 +45,8 @@ namespace rts {
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept { return data.get(i); }
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept { return data.get(i); }
     RTS_ALWAYS_INLINE void put(int i, const T & rhs) noexcept { data.put(i,rhs); }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr operator vec<T,A> & () { return data; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr operator const vec<T,A> & () const { return data; }
   };
 
   template <size_t i, class T, class A>
@@ -49,6 +54,29 @@ namespace rts {
     static_assert(i < A::width,"index out of bounds");
     return v.put(i,r);
   }
+
+  template <class T, class A> varying<T,A> make_varying(const vec<T,A> & v) {
+    return varying<T,A>(v);        
+  }
+
+  template <class T, class A> varying<T,A> make_varying(vec<T,A> && v) {
+    return varying<T,A>(std::move(v));
+  }
+
+  #define RTS_UNARY_MATH(fun) \
+    template <class T, class A> RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const varying<T,A> & v) RTS_MATH_EXCEPT { \
+      return make_varying(fun(vec<T,A>(v))); \
+    }
+
+  #define RTS_BINARY_MATH(fun) \
+    template <class U, class V, class A> RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const varying<U,A> & u, const varying<V,A> & v) RTS_MATH_EXCEPT { \
+      return make_varying(fun(vec<U,A>(v), vec<V,A>(v))); \
+    }
+
+  #include "x-math.hpp"
+
+  #undef RTS_UNARY_MATH
+  #undef RTS_BINARY_MATH
 
   namespace detail {
     template <class A>
