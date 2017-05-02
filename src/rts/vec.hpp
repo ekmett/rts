@@ -1244,8 +1244,8 @@ namespace rts {
     RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return begin()[i]; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
     
-    RTS_ALWAYS_INLINE RTS_PURE constexpr std::complex<T> get(int i) noexcept { return std::complex<T>(first.get(i), second.get(i)); }
-    RTS_ALWAYS_INLINE RTS_PURE constexpr std::complex<T> get(int i) const noexcept { return std::complex<T>(first.get(i),second.get(i)); }
+    RTS_ALWAYS_INLINE RTS_PURE constexpr std::complex<T> get(int i) noexcept { return std::complex<T>(real.get(i), imag.get(i)); }
+    RTS_ALWAYS_INLINE RTS_PURE constexpr std::complex<T> get(int i) const noexcept { return std::complex<T>(real.get(i),imag.get(i)); }
 
     RTS_ALWAYS_INLINE void put(int i, const std::complex<T> & v) noexcept {
       real.put(i,v.real);
