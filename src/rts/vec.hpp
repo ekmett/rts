@@ -1701,7 +1701,7 @@ namespace rts {
 namespace std {
   #define RTS_UNARY_MATH(fun) \
     template <class T, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const rts::vec<T,A> & v) RTS_MATH_NOEXCEPT { \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<T,A> & v) RTS_MATH_NOEXCEPT { \
       rts::vec<decltype(fun(T())),A> result; \
       for (int i=0;i<A::width;++i) \
         result[i] = fun(v[i]); \
