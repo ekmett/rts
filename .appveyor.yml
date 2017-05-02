@@ -79,7 +79,7 @@ build_script:
     }
     # Else, build project with Coverity Scan.
     "Building project with Coverity Scan..."
-    & ".\cov-analysis-win64-7.6.0\bin\cov-build.exe" `
+    & ".\cov-analysis-win64-8.7.0\bin\cov-build.exe" `
       --dir cov-int `
       $buildCmd $buildArgs
     # Compress results.
