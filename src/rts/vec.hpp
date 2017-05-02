@@ -1767,12 +1767,9 @@ namespace std {
   template <class T, class A>
   struct numeric_limits<rts::vec<T,A>> {
     using base_limits = std::numeric_limits<T>;
-
-    static constexpr bool is_specialized = true;
-    
+    static constexpr bool is_specialized = true;    
     static constexpr bool is_signed = base_limits::is_signed; // ?
     static constexpr bool is_integer = base_limits::is_integer; // ?
-
     static constexpr bool is_exact = base_limits::is_exact;
     static constexpr bool has_infinity = base_limits::has_infinity;
     static constexpr bool has_quiet_NaN = base_limits::has_quiet_NaN;
@@ -1793,7 +1790,6 @@ namespace std {
     static constexpr int max_exponent10 = base_limits::max_exponent10;
     static constexpr bool traps = base_limits::traps;
     static constexpr bool tinyness_before = base_limits::tinyness_before;
-
     static RTS_MATH_PURE constexpr rts::vec<T,A> max() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::max()); }
     static RTS_MATH_PURE constexpr rts::vec<T,A> min() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::min()); }
     static RTS_MATH_PURE constexpr rts::vec<T,A> lowest() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::lowest()); }
