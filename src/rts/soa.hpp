@@ -205,6 +205,58 @@ namespace rts {
     static_assert(i<N,"index out of bounds");
     return v.put(i,u);
   }
+
+  // ------------------------------------------------------------------------------------
+  // Lift <cmath> into soa<>
+  // ------------------------------------------------------------------------------------
+
+  #define RTS_UNARY_MATH(fun) \
+    namespace detail { \
+      template <class S, std::size_t N, class A = default_isa> \
+      struct soa_math_##fun : public soa_expr<soa_math_##fun<S,N,A>,N,A> { \
+        using vector = decltype(fun(std::declval<typename S::vector>)); \
+        S base; \
+        RTS_ALWAYS_INLINE constexpr soa_math_##fun(const S & base) noexcept : base(base) {} \
+        RTS_ALWAYS_INLINE soa_math_##fun(S && base) noexcept : base(std::move(base)) {} \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i) RTS_MATH_EXCEPT { return fun(base.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i, const vec<bool,A> & mask) RTS_MATH_EXCEPT { return fun(base.vget(i)); } \
+      }; \
+    } \
+    template <class S, std::size_t N, class A> \
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto fun(const detail::soa_expr<S,N,A> & base) noexcept { \
+      return soa_math_##fun<S,N,A>(base()); \
+    } \
+    template <class S, std::size_t N, class A> \
+    RTS_ALWAYS_INLINE auto fun(detail::soa_expr<S,N,A> && base) noexcept { \
+      return soa_math_##fun<S,N,A>(std::move(base())); \
+    }
+
+  #define RTS_BINARY_MATH(fun) \
+    namespace detail { \
+      template <class S, class T, std::size_t N, class A = default_isa> \
+      struct soa_math_##fun : public soa_expr<soa_math_##fun<S,T,N,A>,N,A> { \
+        using vector = decltype(fun(std::declval<typename S::vector>,std::declval<typename T::vector>)); \
+        S lhs; \
+        T rhs; \
+        RTS_ALWAYS_INLINE constexpr soa_math_##fun(const S & lhs, const T & rhs) noexcept : lhs(lhs), rhs(rhs) {} \
+        RTS_ALWAYS_INLINE soa_math_##fun(S && lhs, T && rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {} \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i) RTS_MATH_EXCEPT { return lhs.vget(i) op rhs.vget(i); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE vector vget(int i, const vec<bool,A> & mask) RTS_MATH_EXCEPT { return lhs.vget(i, mask) op rhs.vget(i, mask); } \
+      }; \
+    } \
+    template <class S, class T, std::size_t N, class A> \
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto fun(const detail::soa_expr<S,N,A> & lhs, const detail::soa_expr<T,N,A> & rhs) noexcept { \
+      return detail::soa_math_##fun<S,T,N,A>(lhs(), rhs()); \
+    } \
+    template <class S, class T, std::size_t N, class A> \
+    RTS_ALWAYS_INLINE auto fun(detail::soa_expr<S,N,A> && lhs, detail::soa_expr<T,N,A> && rhs) noexcept { \
+      return detail::soa_math_##fun<S,T,N,A>(lhs(), rhs()); \
+    }
+
+  #include "x-math.hpp"
+
+  #undef RTS_UNARY_MATH
+  #undef RTS_BINARY_MATH
 } // namespace rts
 
 namespace std {
