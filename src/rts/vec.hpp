@@ -138,7 +138,7 @@ namespace rts {
 
     RTS_ALWAYS_INLINE constexpr vec() noexcept = default;
     RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
-    RTS_ALWAYS_INLINE constexpr vec(T u) noexcept : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
+    RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
     RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> l) noexcept : data(l) {}
     RTS_ALWAYS_INLINE constexpr vec(const T & u, detail::step_t) noexcept {
       T v = u;
@@ -1687,37 +1687,39 @@ namespace rts {
     #define RTS_MATH_PURE RTS_PURE
   #endif
 
-  #define RTS_UNARY_MATH(fun) \
-    using std::fun; \
-    template <class T, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const vec<T,A> & v) RTS_MATH_NOEXCEPT { \
-      vec<decltype(fun(std::declval<T>)),A> result; \
-      for (int i=0;i<A::width;++i) \
-        result[i] = fun(v[i]); \
-      return result; \
-    }
-
-  #define RTS_BINARY_MATH(fun) \
-    using std::fun; \
-    template <class U, class V, class A> \
-    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const vec<U,A> & u, const vec<V,A> & v) RTS_MATH_NOEXCEPT { \
-      vec<decltype(fun(std::declval<U>,std::declval<V>)),A> result; \
-      for (int i=0;i<A::width;++i) \
-        result[i] = fun(u[i],v[i]); \
-      return result; \
-    }
-  
+  #define RTS_UNARY_MATH(fun) using std::fun;
+  #define RTS_BINARY_MATH(fun) using std::fun;
   #include "x-math.hpp"
-
   #undef RTS_UNARY_MATH
   #undef RTS_BINARY_MATH
 
   using std::get;
   using std::tuple_size;
   using std::tuple_element;
-} // namespace rts
+}
 
 namespace std {
+  #define RTS_UNARY_MATH(fun) \
+    template <class T, class A> \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE auto fun(const rts::vec<T,A> & v) RTS_MATH_NOEXCEPT { \
+      rts::vec<decltype(fun(declval<const T &>)),A> result; \
+      for (int i=0;i<A::width;++i) \
+        result[i] = fun(v[i]); \
+      return result; \
+    }
+  #define RTS_BINARY_MATH(fun) \
+    using std::fun; \
+    template <class U, class V, class A> \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<U,A> & u, const rts::vec<V,A> & v) RTS_MATH_NOEXCEPT { \
+      rts::vec<decltype(fun(std::declval<const U &>,std::declval<const V &>)),A> result; \
+      for (int i=0;i<A::width;++i) \
+        result[i] = fun(u[i],v[i]); \
+      return result; \
+    }
+  
+  #include "x-math.hpp"
+  #undef RTS_UNARY_MATH
+  #undef RTS_BINARY_MATH
 
   template <std::size_t i, class T, class A>
   RTS_ALWAYS_INLINE RTS_PURE auto get(rts::vec<T,A> & v) noexcept {
