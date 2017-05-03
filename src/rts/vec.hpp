@@ -136,48 +136,50 @@ namespace rts {
 
     T data [arch::width];
 
-    RTS_ALWAYS_INLINE constexpr vec() noexcept = default;
-    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
-    RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
-    RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> l) noexcept : data(l) {}
-    RTS_ALWAYS_INLINE constexpr vec(const T & u, detail::step_t) noexcept {
+    RTS_ALWAYS_INLINE constexpr vec() noexcept(std::is_nothrow_default_constructible_v<T>) = default;
+    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible_v<T>) = default;
+    RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept(std::is_nothrow_default_constructible_v<T> && std::is_nothrow_assignable_v<T,const T&>) : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
+    RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> l) noexcept(noexcept(T[arch::width](l))) : data(l) {}
+    RTS_ALWAYS_INLINE constexpr vec(const T & u, detail::step_t) noexcept(noexcept(std::declval<T>++) && std::is_nothrow_default_constructible_v<T> && std::is_nothrow_assignable_v<T,const T&>) {
       T v = u;
       for (auto && r : data) r = v++;
     }
     RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
 
     template <class U>
-    RTS_ALWAYS_INLINE vec & operator=(vec<U,A> & rhs) noexcept {
-      data = rhs.data;
+    RTS_ALWAYS_INLINE vec & operator=(vec<U,A> & rhs) noexcept(noexcept(data[0] = rhs.get(0))) {
+      for (int i=0;i<A::width;++i)
+        data[i] = rhs.get(i);
       return *this;
     }
 
-    RTS_ALWAYS_INLINE vec & operator=(const T & rhs) noexcept {
-      data.fill(rhs);
+    RTS_ALWAYS_INLINE vec & operator=(const T & rhs) noexcept(noexcept(data[0] = rhs)) {
+      for (int i=0;i<A::width;++i)
+        data[i] = rhs;
       return *this;
     }
 
-    RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept {
+    RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable_v<T>) {
       data = std::move(rhs.data);
       return *this;
     }
 
-    RTS_ALWAYS_INLINE void swap(vec & rhs) noexcept {
+    RTS_ALWAYS_INLINE void swap(vec & rhs) noexcept(noexcept(std::swap(data,rhs.data))) {
       std::swap(data,rhs.data);
     }
 
     RTS_ALWAYS_INLINE RTS_CONST constexpr reference get(int i) noexcept { return data[i]; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return data[i]; }
-    RTS_ALWAYS_INLINE void put(int i, T rhs) noexcept { data[i] = rhs; }
+    RTS_ALWAYS_INLINE void put(int i, const T & rhs) noexcept(std::is_nothrow_copy_assignable_v<T>) { data[i] = rhs; }
 
     #define RTS_ASSIGN(op) \
       template <class U> \
-      RTS_ALWAYS_INLINE vec & operator op (vec<U,A> & rhs) noexcept { \
+      RTS_ALWAYS_INLINE vec & operator op (vec<U,A> & rhs) noexcept(noexcept(data[0] op rhs[0])) { \
         for (int i=0;i<A::width;++i) data[i] op rhs[i]; \
         return *this; \
       } \
       template <class U> \
-      RTS_ALWAYS_INLINE vec & operator op (const U & rhs) noexcept { \
+      RTS_ALWAYS_INLINE vec & operator op (const U & rhs) noexcept(noexcept(data[0] op rhs)) { \
         for (int i=0;i<A::width;++i) data[i] op rhs; \
         return *this; \
       }
