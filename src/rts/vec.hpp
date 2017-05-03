@@ -108,6 +108,8 @@ namespace rts {
 
   using target::default_isa;
 
+  template <typename T, std::size_t N> using array = T[N];
+
   // --------------------------------------------------------------------------------
   // * vec<T,A>
   // --------------------------------------------------------------------------------
@@ -137,11 +139,11 @@ namespace rts {
 
     T data [arch::width];
 
-    RTS_ALWAYS_INLINE constexpr vec() noexcept(std::is_nothrow_default_constructible_v<T>) = default;
-    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible_v<T>) = default;
-    RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept(std::is_nothrow_default_constructible_v<T> && std::is_nothrow_assignable_v<T,const T&>) : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
-    RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> l) noexcept(noexcept(T[arch::width](l))) : data(l) {}
-    RTS_ALWAYS_INLINE constexpr vec(const T & u, detail::step_t) noexcept(noexcept(std::declval<T>++) && std::is_nothrow_default_constructible_v<T> && std::is_nothrow_assignable_v<T,const T&>) {
+    RTS_ALWAYS_INLINE constexpr vec() noexcept(std::is_nothrow_default_constructible<T>::value) = default;
+    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible<T>::value) = default;
+    RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_assignable<T,const T&>::value) : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
+    RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> l) noexcept(noexcept(array<T,arch::width>(l))) : data(l) {}
+    RTS_ALWAYS_INLINE constexpr vec(const T & u, detail::step_t) noexcept(noexcept(std::declval<T>++) && std::is_nothrow_default_constructible<T>::value && std::is_nothrow_assignable<T,const T&>::value) {
       T v = u;
       for (auto && r : data) r = v++;
     }
@@ -160,7 +162,7 @@ namespace rts {
       return *this;
     }
 
-    RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable_v<T>) {
+    RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable<T>::value) {
       data = std::move(rhs.data);
       return *this;
     }
@@ -171,7 +173,7 @@ namespace rts {
 
     RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference get(int i) noexcept { return data[i]; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return data[i]; }
-    RTS_ALWAYS_INLINE void put(int i, const T & rhs) noexcept(std::is_nothrow_copy_assignable_v<T>) { data[i] = rhs; }
+    RTS_ALWAYS_INLINE void put(int i, const T & rhs) noexcept(std::is_nothrow_copy_assignable<T>::value) { data[i] = rhs; }
 
     #define RTS_ASSIGN(op) \
       template <class U> \
@@ -623,11 +625,11 @@ namespace rts {
         for (int i=0;i<arch::width;++i) u.put(i,*v.get(i));
       }
 
-      RTS_ALWAYS_INLINE static void store_masked(pointers v, const vector & u, mask m) noexcept(noexcept(*v.get(i) = u.get(i))) {
+      RTS_ALWAYS_INLINE static void store_masked(pointers v, const vector & u, mask m) noexcept(noexcept(*v.get(0) = u.get(0))) {
         foreach_active(m, [&](int i) { *v.get(i) = u.get(i); });
       }
 
-      RTS_ALWAYS_INLINE static void store(pointers v, const vector & u) noexcept(noexcept(*v.get(i) = u.get(i))) {
+      RTS_ALWAYS_INLINE static void store(pointers v, const vector & u) noexcept(noexcept(*v.get(0) = u.get(0))) {
         for (int i=0;i<arch::width;++i) *v.get(i) = u.get(i);
       }
     };
@@ -1020,10 +1022,9 @@ namespace rts {
 
   template <class T, class A>
   RTS_ALWAYS_INLINE vec<T,A> load(const vec<T*,A> & pointers, const vec<bool,A> & mask) noexcept(
-    std::is_nothrow_default_constructible_v<vec<T,A>> && 
-    std::is_nothrow_move_constructible_v<vec<T,A>> &&
-    std::is_nothrow_copy_constructible_v<vec<T,A>> &&
-    noexcept(detail::loader<T,A>::load_masked(result,pointers,mask))
+    std::is_nothrow_move_constructible<vec<T,A>>::value &&
+    std::is_nothrow_copy_constructible<vec<T,A>>::value &&
+    noexcept(detail::loader<T,A>::load_masked(vec<T,A>(),pointers,mask))
   ) {
     vec<T,A> result;
     detail::loader<T,A>::load(result, pointers, mask);
@@ -1032,10 +1033,9 @@ namespace rts {
 
   template <class T, class A>
   RTS_ALWAYS_INLINE vec<T,A> load(const vec<T*,A> & pointers) noexcept(
-    std::is_nothrow_default_constructible_v<vec<T,A>> && 
-    std::is_nothrow_move_constructible_v<vec<T,A>> &&
-    std::is_nothrow_copy_constructible_v<vec<T,A>> &&
-    noexcept(detail::loader<T,A>::load(result,pointers))
+    std::is_nothrow_move_constructible<vec<T,A>>::value &&
+    std::is_nothrow_copy_constructible<vec<T,A>>::value &&
+    noexcept(detail::loader<T,A>::load(vec<T,A>(),pointers))
   ) {
     vec<T,A> result;
     detail::loader<T,A>::load(result, pointers);
@@ -1063,10 +1063,10 @@ namespace rts {
     template <class T, class A>
     struct vrefref {
       typename vec<T*,A>::const_reference r;
-      RTS_ALWAYS_INLINE vrefref() noexcept(std::is_nothrow_default_constructible_v<typename vec<T*,A>::const_reference>) = delete;
-      RTS_ALWAYS_INLINE constexpr vrefref(const vrefref &) noexcept(std::is_nothrow_copy_constructible<typename vec<T*,A>::const_reference>) = default;
-      RTS_ALWAYS_INLINE vrefref(vrefref && rhs) noexcept(std::is_nothrow_move_construcible_v<typename vec<T*,A>::const_reference>) = default;
-      RTS_ALWAYS_INLINE explicit constexpr vrefref(const typename vec<T*,A>::const_reference & r) noexcept(std::is_nothrow_copy_constructible<typename vec<T*,A>::const_reference>) : r(r) {}
+      RTS_ALWAYS_INLINE vrefref() noexcept(std::is_nothrow_default_constructible<typename vec<T*,A>::const_reference>::value) = delete;
+      RTS_ALWAYS_INLINE constexpr vrefref(const vrefref &) noexcept(std::is_nothrow_copy_constructible<typename vec<T*,A>::const_reference>::value) = default;
+      RTS_ALWAYS_INLINE vrefref(vrefref && rhs) noexcept(std::is_nothrow_move_constructible<typename vec<T*,A>::const_reference>::value) = default;
+      RTS_ALWAYS_INLINE explicit constexpr vrefref(const typename vec<T*,A>::const_reference & r) noexcept(std::is_nothrow_copy_constructible<typename vec<T*,A>::const_reference>::value) : r(r) {}
       RTS_ALWAYS_INLINE RTS_CONST constexpr T & get() const noexcept(noexcept(*r.get())) { return *r.get(); }
       RTS_ALWAYS_INLINE RTS_CONST constexpr operator T & () const noexcept(noexcept(*r.get())) { return *r.get(); }
       RTS_ALWAYS_INLINE constexpr vrefptr<T,A> operator & () const noexcept; // (noexcept(vrefptr<T,A>(&r))); // TODO: refine this noexcept clause
@@ -1076,9 +1076,9 @@ namespace rts {
     struct vrefptr {
       // faux "pointer to a reference"
       typename vec<T*,A>::const_pointer p;
-      RTS_ALWAYS_INLINE constexpr vrefptr () noexcept(std::is_nothrow_default_constructible_v<typename vec<T*,A>::const_pointer>) : p() {}
-      RTS_ALWAYS_INLINE explicit constexpr vrefptr(const typename vec<T*,A>::const_pointer & p) noexcept(std::is_nothrow_copy_constructible_v<typename vec<T*,A>::const_pointer>) : p(p) {}
-      RTS_ALWAYS_INLINE vrefptr(vrefptr && rhs) noexcept(std::is_nothrow_move_constructible_v<typename vec<T*,A>::const_pointer>) = default;
+      RTS_ALWAYS_INLINE constexpr vrefptr () noexcept(std::is_nothrow_default_constructible<typename vec<T*,A>::const_pointer>::value) : p() {}
+      RTS_ALWAYS_INLINE explicit constexpr vrefptr(const typename vec<T*,A>::const_pointer & p) noexcept(std::is_nothrow_copy_constructible<typename vec<T*,A>::const_pointer>::value) : p(p) {}
+      RTS_ALWAYS_INLINE vrefptr(vrefptr && rhs) noexcept(std::is_nothrow_move_constructible<typename vec<T*,A>::const_pointer>::value) = default;
       RTS_ALWAYS_INLINE RTS_PURE constexpr vrefref<T,A> operator * () noexcept(noexcept(vrefref<T,A>(*p))) { return vrefref<T,A>(*p); }
       // we need operators to manipulate these
       RTS_ALWAYS_INLINE RTS_PURE constexpr vrefptr operator - (std::ptrdiff_t rhs) const noexcept(noexcept(vrefptr(p-rhs))) { return vrefptr(p - rhs); }
@@ -1373,7 +1373,7 @@ namespace rts {
       );
     }
 
-    RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept(noexcept(detail::put1<Is>(data,i,v))) {
+    RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept(noexcept(detail::put1<0>(data,i,v))) {
       detail::index_apply<std::tuple_size<value_type>{}>(
         [&](auto... Is) { RTS_UNUSED auto l = { detail::put1<Is>(data,i,v)... }; }
       );

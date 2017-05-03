@@ -18,13 +18,13 @@ namespace rts {
 
     vector data;
 
-    RTS_ALWAYS_INLINE constexpr varying() noexcept(std::is_nothrow_default_constructible_v<vector>) : data() {}
+    RTS_ALWAYS_INLINE constexpr varying() noexcept(std::is_nothrow_default_constructible<vector>::value) : data() {}
 
     template <typename ... Args>
     RTS_ALWAYS_INLINE constexpr varying(Args && ... args) noexcept(noexcept(vector(std::forward(args)...))) : data(std::forward(args)...) {}
 
-    explicit RTS_ALWAYS_INLINE varying(const vector & data) noexcept(std::is_nothrow_copy_constructible_v<vector>) : data(data) {}
-    explicit RTS_ALWAYS_INLINE varying(vector && data) noexcept(std::is_nothrow_move_constructible_v<vector>) : data(std::move(data)) {}
+    explicit RTS_ALWAYS_INLINE varying(const vector & data) noexcept(std::is_nothrow_copy_constructible<vector>::value) : data(data) {}
+    explicit RTS_ALWAYS_INLINE varying(vector && data) noexcept(std::is_nothrow_move_constructible<vector>::value) : data(std::move(data)) {}
 
     RTS_ALWAYS_INLINE varying(varying && rhs) : data(std::move(rhs.data)) {}
 
@@ -57,12 +57,12 @@ namespace rts {
   }
 
   template <class T, class A> 
-  RTS_ALWAYS_INLINE RTS_PURE varying<T,A> make_varying(const vec<T,A> & v) noexcept(std::is_nothrow_copy_constructible_v<vec<T,A>>) {
+  RTS_ALWAYS_INLINE RTS_PURE varying<T,A> make_varying(const vec<T,A> & v) noexcept(std::is_nothrow_copy_constructible<vec<T,A>>::value) {
     return varying<T,A>(v);        
   }
 
   template <class T, class A> 
-  RTS_ALWAYS_INLINE varying<T,A> make_varying(vec<T,A> && v) noexcept(std::is_nothrow_move_constructible_v<vec<T,A>>) {
+  RTS_ALWAYS_INLINE varying<T,A> make_varying(vec<T,A> && v) noexcept(std::is_nothrow_move_constructible<vec<T,A>>::value) {
     return varying<T,A>(std::move(v));
   }
 
