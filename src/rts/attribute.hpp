@@ -178,6 +178,14 @@
 #define RTS_UNUSED
 #endif
 
+// c++11 constexpr implies const, if we want to compile in c++11 mode, 
+// we'd need to use this to disable constexpr for such functions
+#if (defined __cplusplus) && (__cplusplus == 201103L)
+#define RTS_MUTABLE_CONSTEXPR
+#else
+#define RTS_MUTABLE_CONSTEXPR constexpr
+#endif
+
 // @}
 
 // @}

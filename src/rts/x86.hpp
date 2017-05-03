@@ -1,6 +1,7 @@
 #pragma once
-#include "attribute.hpp"
 
+#include "platform.hpp"
+#include "attribute.hpp"
 #include <cstdint>
 
 #ifdef _WIN32
@@ -36,16 +37,16 @@
 #endif
 
 #ifndef rts_lzcnt_u32
-#define rts_lzcnt_u32 _lzcnt32
+  #define rts_lzcnt_u32 _lzcnt32
 #endif
 
 #ifndef rts_lzcnt_u64
-#define rts_lzcnt_u64 _lzcnt64
+  #define rts_lzcnt_u64 _lzcnt64
 #endif
 
 #if defined(_WIN32)
-#  define NOMINMAX
-#  include <windows.h>
+  #define NOMINMAX
+  #include <windows.h>
 #endif
 
 /// @file rts/x86.hpp

@@ -1,7 +1,6 @@
 #include "cpu.hpp"
 #include "attribute.hpp"
-
-#include <stdio.h>
+#include "platform.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define PROP_WINDOWS
@@ -150,9 +149,3 @@ namespace rts {
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#ifdef TEST
-int main() {
- printf("%d\n", rts::system_isa());
-}
-#endif

@@ -38,10 +38,10 @@ install:
 - cmd: choco install doxygen.portable
 - ps: |
     # Download Coverity Build Tool if we are doing scheduled build.
-    if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64") {
+    if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64" -and $env:CONFIGURATION -eq "Debug") {
       "Downloading coverity"
       Invoke-WebRequest `
-        -Uri "https://scan.coverity.com/download/cxx/win_64" `
+        -Uri "https://scan.coverity.com/download/cxx/win64" `
         -Body @{ project = "$env:APPVEYOR_REPO_NAME";
                 token = "$env:CoverityProjectToken" } `
         -OutFile "$env:APPVEYOR_BUILD_FOLDER\coverity.zip"
@@ -73,13 +73,13 @@ build_script:
       "/l:C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll", 
       "/p:Platform=$env:PLATFORM"
       )
-    if ($env:APPVEYOR_SCHEDULED_BUILD -ne "True" -or $env:PLATFORM -ne "x64") {
+    if ($env:APPVEYOR_SCHEDULED_BUILD -ne "True" -or $env:PLATFORM -ne "x64" -or $env:CONFIGURATION -ne "Debug") {
       & $buildCmd $buildArgs
       return # exit script
     }
     # Else, build project with Coverity Scan.
     "Building project with Coverity Scan..."
-    & ".\cov-analysis-win64-7.6.0\bin\cov-build.exe" `
+    & ".\cov-analysis-win64-8.7.0\bin\cov-build.exe" `
       --dir cov-int `
       $buildCmd $buildArgs
     # Compress results.
@@ -147,7 +147,19 @@ test_script:
 - cmd: ctest --build-config %configuration% --parallel 4 --output-on-failure
 
 on_success:
-- "python c:/project/rts/bin/irc-notify.py {color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} {job_name} {color_code}03passed{color_off} {color_code}02{underline}{job_url}{color_off}"
+- ps: |
+    if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64" -and $env:CONFIGURATION -eq "Debug") {
+      $mode = "Scan"
+    } else {
+      $mode = "Build"
+    }
+    & python c:/project/rts/bin/irc-notify.py "{color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} $mode {job_name} {color_code}03passed{color_off} {color_code}02{underline}{job_url}{color_off}"
 
 on_failure:
-- "python c:/project/rts/bin/irc-notify.py {color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} {job_name} {color_code}04failed{color_off} {color_code}02{underline}{job_url}{color_off}"
+- ps: |
+    if ($env:APPVEYOR_SCHEDULED_BUILD -eq "True" -and $env:PLATFORM -eq "x64" -and $env:CONFIGURATION -eq "Debug") {
+      $mode = "Scan"
+    } else {
+      $mode = "Build"
+    }
+    & python c:/project/rts/bin/irc-notify.py "{color_code}13{project_name}{color_off}/{color_code}06{branch}{color_off} {color_code}14{short_commit}{color_off} {color_code}02{build_number}.{job_number}{color_off} $mode {job_name} {color_code}04failed{color_off} {color_code}02{underline}{job_url}{color_off}"

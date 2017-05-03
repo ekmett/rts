@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN
+#include "rts/platform.hpp"
 #include "catch.hpp"
 #include "rts.hpp"
 #include "type.hpp"
@@ -17,7 +18,7 @@ template <class T, class A, class B> bool het_eq(const vec<T,A> & lhs, const vec
 }
 
 template <class T, class A, typename ... Args> void pod_arch_test(Args ... args) {
-  using G = generic<A::width>;
+  using G = target::generic<A::width>;
 
   SECTION(type<T>()) {
     CHECK(sizeof(rts::vec<T,A>) == sizeof(T)*A::width);
@@ -34,11 +35,11 @@ template <class A> void arch_test() {
 }
 
 TEST_CASE("pod", "[pod]") {
-  arch_test<generic<1>>();
+  arch_test<target::generic<1>>();
 #ifdef __AVX__
-  arch_test<avx_4>();
+  arch_test<target::avx_4>();
 #endif
 #ifdef __AVX2__
-  arch_test<avx2_8>();
+  arch_test<target::avx2_8>();
 #endif
 }

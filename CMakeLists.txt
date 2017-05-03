@@ -9,6 +9,13 @@ include(CMakeToolsHelpers OPTIONAL)
 
 include(CTest)
 
+if(MSVC)
+  message("libm not required")
+else()
+	set(MATH_LIBRARIES "m")
+  message("libm required")
+endif()
+
 # use foo.o rather than foo.cpp.o
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
@@ -81,6 +88,9 @@ endif()
 # fetch into build dir, we can't cache it in the submodule dir
 SET(BOOST_DOWNLOAD_TO_BINARY_DIR ON CACHE BOOL "Download into binary directory for caching")
 add_subdirectory("opt/boost-cmake")
+
+CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX_SUPPORTS_CXX11)
+# for eventual fallback?
 
 # c++14
 CHECK_CXX_COMPILER_FLAG("-std=c++14" CXX_SUPPORTS_CXX14)

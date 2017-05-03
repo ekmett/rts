@@ -1922,7 +1922,7 @@ MACRO_EXPANSION        = YES
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_ONLY_PREDEF     = YES
+EXPAND_ONLY_PREDEF     = NO
 
 # If the SEARCH_INCLUDES tag is set to YES the includes files in the
 # INCLUDE_PATH will be searched if a #include is found.
@@ -1964,8 +1964,11 @@ PREDEFINED = "__declspec(X)= " \
   "RTS_MALLOC= " \
   "RTS_RETURNS_NONNULL= " \
   "RTS_PURE= " \
-  "RTS_ALWAYS_INLINE= " \
-  "RTS_CONST= "
+  "RTS_ALWAYS_INLINE=inline " \
+  "RTS_CONST= " \
+  "__AVX__=1" \
+  "__AVX2__=1" \
+  "__RTM__=1" 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
