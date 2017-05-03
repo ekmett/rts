@@ -19,6 +19,7 @@ namespace rts {
     static const struct internal_t {} internal_tag = {};
     static const struct indirection_t {} indirection_tag = {};
     static const struct step_t {} step_tag = {};
+    static const struct reinterpret_t {} reinterpret_tag = {};
     static RTS_CONST constexpr int ilog2(int v) { // intended for constexpr use
       int r = 0;
       while (v >>= 1) ++r;
@@ -144,10 +145,11 @@ namespace rts {
     RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_assignable<T,const T&>::value) : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
     RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> il) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_copy_assignable<T>::value) : data() { std::copy(il.begin(), il.end(), data); }
 
-    template <class ... Ts>
-    RTS_ALWAYS_INLINE constexpr vec(Ts ... ts) noexcept(std::is_nothrow_default_constructible<T>::value && noexcept(data[0] = T(ts...))) : data() { 
-      for(int i=0;i<arch::width;++i) data[i] = T(ts...);
-    } // this is a hot mess
+    template <class U>
+    RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : data(reinterpret_cast<vec*>(&rhs)->data) {
+      static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+    }
+
 
     RTS_ALWAYS_INLINE constexpr vec(const T & u, detail::step_t) noexcept(noexcept(std::declval<T>++) && std::is_nothrow_default_constructible<T>::value && std::is_nothrow_assignable<T,const T&>::value) {
       T v = u;
@@ -489,8 +491,13 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(bool a, bool b, bool c, bool d) noexcept : d{a?~0:0,b?~0:0,c?~0:0,d?~0:0} {}
 
       template <class U>
-      RTS_ALWAYS_INLINE constexpr vec(const vec<U,target::avx_4> & rhs) noexcept
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs) noexcept
         : vec(rhs.get(0),rhs.get(1),rhs.get(2),rhs.get(3)) { }
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
 
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return iterator(this); }
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return iterator(this+1); }
@@ -551,11 +558,17 @@ namespace rts {
       RTS_ALWAYS_INLINE vec(vec && v) noexcept = default;
 
       template <class U>
-      RTS_ALWAYS_INLINE vec(const vec<U,target::avx2_8> & rhs) : vec() {
-        for (int i=0;i<8;++i)
+      RTS_ALWAYS_INLINE vec(const vec<U,arch> & rhs) : vec() {
+        for (int i=0;i<arch::width;++i)
           if (rhs.get(i))
             reinterpret_cast<std::int32_t*>(&m)[i] = ~0;
       }
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
+
 
       RTS_ALWAYS_INLINE constexpr vec(std::false_type) noexcept : d{0,0,0,0,0,0,0,0} {}
       RTS_ALWAYS_INLINE constexpr vec(std::true_type) noexcept : d{~0,~0,~0,~0,~0,~0,~0,~0} {}
@@ -670,6 +683,12 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(__m128i m) noexcept : m(m) {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
 
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
+
+
       RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return d; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return d + arch::width; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
@@ -738,6 +757,12 @@ namespace rts {
           std::int32_t e, std::int32_t f, std::int32_t g, std::int32_t h) noexcept : d{a,b,c,d,e,f,g,h} {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
 
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
+
+
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
@@ -802,7 +827,13 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f} {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d) noexcept : d{a,b,c,d} {}
+      RTS_ALWAYS_INLINE constexpr explicit vec(__m128 m) : m(m) {}
       RTS_ALWAYS_INLINE vec(vec && rhs) : m(std::move(rhs.m)) {}
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
 
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
@@ -819,6 +850,7 @@ namespace rts {
       RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm_add_ps(m,rhs.m); return *this; }
       RTS_ALWAYS_INLINE vec & operator -= (const vec & rhs) noexcept { m = _mm_sub_ps(m,rhs.m); return *this; }
       RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm_mul_ps(m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator & (const vec & rhs) const noexcept { return vec(_mm_and_ps(m,rhs.m)); }
     };
   #endif
 
@@ -846,6 +878,13 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f,f,f,f,f} {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d, float e, float f, float g, float h) noexcept : d{a,b,c,d,e,f,g,h} {}
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
+
+      RTS_ALWAYS_INLINE constexpr explicit vec(__m256 m) : m(m) {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
 
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
@@ -863,6 +902,7 @@ namespace rts {
       RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm256_add_ps(m,rhs.m); return *this; }
       RTS_ALWAYS_INLINE vec & operator -= (const vec & rhs) noexcept { m = _mm256_sub_ps(m,rhs.m); return *this; }
       RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm256_mul_ps(m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator & (const vec & rhs) const noexcept { return vec(_mm256_and_ps(m,rhs.m)); }
     };
   #endif
 
@@ -893,6 +933,11 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(T * a) noexcept : d(a,a,a,a) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(d.m) {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(d.m)) {}
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
 
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
@@ -939,6 +984,11 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(T * a) noexcept : d(a,a,a,a,a,a,a,a) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(d.m) {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(d.m)) {}
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
 
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
@@ -1150,6 +1200,11 @@ namespace rts {
     RTS_ALWAYS_INLINE explicit vec(const vec<T*,A> & that, detail::indirection_t) noexcept(noexcept(base(that))) : pointers(that) {};
     RTS_ALWAYS_INLINE explicit vec(vec<T*,A> && that, detail::indirection_t) noexcept(noexcept(base(std::move(that)))) : pointers(std::move(that)) {}
 
+    template <class U>
+    RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : pointers(reinterpret_cast<vec*>(&rhs)->pointers) {
+      static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+    }
+
     RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return iterator(pointers.begin()); }
     RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return iterator(pointers.end()); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return iterator(pointers.cbegin()); }
@@ -1279,6 +1334,13 @@ namespace rts {
     template <typename U>
     RTS_ALWAYS_INLINE explicit constexpr vec(const vec<U,A> & that) noexcept : real(that.real), imag(that.imag) {}
 
+    template <class U>
+    RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept 
+    : real(reinterpret_cast<vec*>(&rhs)->real) 
+    , imag(reinterpret_cast<vec*>(&rhs)->imag){
+      static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+    }
+
     RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;    
 
@@ -1326,6 +1388,13 @@ namespace rts {
 
     template <typename U, typename V>
     RTS_ALWAYS_INLINE explicit constexpr vec(const std::pair<U,V> & that) noexcept : first(that.first), second(that.second) {}
+
+    template <class U>
+    RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept 
+    : first(reinterpret_cast<vec*>(&rhs)->first) 
+    , second(reinterpret_cast<vec*>(&rhs)->second){
+      static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+    }
 
     RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
@@ -1375,6 +1444,12 @@ namespace rts {
     RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
     RTS_ALWAYS_INLINE constexpr vec(std::tuple<Ts...> b) noexcept : data () {}
+
+    template <class U>
+    RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept 
+    : data(reinterpret_cast<vec*>(&rhs)->data) {
+      static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+    }
 
     RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
@@ -1758,7 +1833,6 @@ namespace std {
       return result; \
     }
   #define RTS_BINARY_MATH(fun) \
-    using std::fun; \
     template <class U, class V, class A> \
     RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<U,A> & u, const rts::vec<V,A> & v) RTS_MATH_NOEXCEPT { \
       rts::vec<decltype(fun(U(),V())),A> result; \
@@ -1767,7 +1841,6 @@ namespace std {
       return result; \
     }
   #define RTS_TERNARY_MATH(fun) \
-    using std::fun; \
     template <class U, class V, class W, class A> \
     RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<U,A> & u, const rts::vec<V,A> & v, const rts::vec<W,A> & w) RTS_MATH_NOEXCEPT { \
       rts::vec<decltype(fun(U(),V(),W())),A> result; \
