@@ -17,9 +17,12 @@ if(NOT POW_EXISTS)
   CHECK_FUNCTION_EXISTS(pow POW_EXISTS)
   if(POW_EXISTS)
 		set(MATH_LIBRARIES "m")
+    message("libm required")
   else()
     message(FATAL_ERROR "No pow() found")
   endif()
+else()
+  message("libm not required")
 endif()
 
 # use foo.o rather than foo.cpp.o
