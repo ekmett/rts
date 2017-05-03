@@ -95,6 +95,9 @@ endif()
 SET(BOOST_DOWNLOAD_TO_BINARY_DIR ON CACHE BOOL "Download into binary directory for caching")
 add_subdirectory("opt/boost-cmake")
 
+CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX_SUPPORTS_CXX11)
+# for eventual fallback?
+
 # c++14
 CHECK_CXX_COMPILER_FLAG("-std=c++14" CXX_SUPPORTS_CXX14)
 if(CXX_SUPPORTS_CXX14)
