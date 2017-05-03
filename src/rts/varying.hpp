@@ -34,24 +34,24 @@ namespace rts {
         return *this;
     }
 
-    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return data.begin(); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return data.end(); }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return data.begin(); }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return data.end(); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return data.begin(); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return data.end(); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return data.cbegin(); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return data.cend(); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator[](int i) noexcept { return data[i]; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator[](int i) const noexcept { return data[i]; }
-    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept { return data.get(i); }
+    RTS_ALWAYS_INLINE RTS_PURE RTS_MUTABLE_CONSTEXPR auto get(int i) noexcept { return data.get(i); }
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept { return data.get(i); }
     RTS_ALWAYS_INLINE void put(int i, const T & rhs) noexcept { data.put(i,rhs); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr operator vec<T,A> & () & { return data; }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR operator vec<T,A> & () & { return data; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr operator const vec<T,A> & () const & { return data; }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr operator vec<T,A> && () && { return data; }
+    RTS_ALWAYS_INLINE RTS_CONST operator vec<T,A> && () && { return data; }
   };
 
   template <size_t i, class T, class A>
-  RTS_ALWAYS_INLINE void put(varying<T,A> & v, const T & r) noexcept {
+  RTS_ALWAYS_INLINE void put(varying<T,A> & v, const T & r) noexcept(noexcept(v.put(i,r))) {
     static_assert(i < A::width,"index out of bounds");
     return v.put(i,r);
   }
