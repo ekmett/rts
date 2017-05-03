@@ -18,13 +18,13 @@ namespace rts {
 
     vector data;
 
-    RTS_ALWAYS_INLINE constexpr varying() noexcept : data() {}
+    RTS_ALWAYS_INLINE constexpr varying() noexcept(std::is_nothrow_default_constructible_v<vector>) : data() {}
 
     template <typename ... Args>
-    RTS_ALWAYS_INLINE constexpr varying(Args ... args) noexcept : data(std::forward(args)...) {}
+    RTS_ALWAYS_INLINE constexpr varying(Args && ... args) noexcept(noexcept(vector(std::forward(args)...))) : data(std::forward(args)...) {}
 
-    explicit RTS_ALWAYS_INLINE varying(const vector & data) : data(data) {}
-    explicit RTS_ALWAYS_INLINE varying(vector && data) : data(std::move(data)) {}
+    explicit RTS_ALWAYS_INLINE varying(const vector & data) noexcept(std::is_nothrow_copy_constructible_v<vector>) : data(data) {}
+    explicit RTS_ALWAYS_INLINE varying(vector && data) noexcept(std::is_nothrow_move_constructible_v<vector>) : data(std::move(data)) {}
 
     RTS_ALWAYS_INLINE varying(varying && rhs) : data(std::move(rhs.data)) {}
 
@@ -45,8 +45,9 @@ namespace rts {
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept { return data.get(i); }
     RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept { return data.get(i); }
     RTS_ALWAYS_INLINE void put(int i, const T & rhs) noexcept { data.put(i,rhs); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr operator vec<T,A> & () { return data; }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr operator const vec<T,A> & () const { return data; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr operator vec<T,A> & () & { return data; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr operator const vec<T,A> & () const & { return data; }
+    RTS_ALWAYS_INLINE RTS_CONST constexpr operator vec<T,A> && () && { return data; }
   };
 
   template <size_t i, class T, class A>
@@ -55,11 +56,13 @@ namespace rts {
     return v.put(i,r);
   }
 
-  template <class T, class A> varying<T,A> make_varying(const vec<T,A> & v) {
+  template <class T, class A> 
+  RTS_ALWAYS_INLINE RTS_PURE varying<T,A> make_varying(const vec<T,A> & v) noexcept(std::is_nothrow_copy_constructible_v<vec<T,A>>) {
     return varying<T,A>(v);        
   }
 
-  template <class T, class A> varying<T,A> make_varying(vec<T,A> && v) {
+  template <class T, class A> 
+  RTS_ALWAYS_INLINE varying<T,A> make_varying(vec<T,A> && v) noexcept(std::is_nothrow_move_constructible_v<vec<T,A>>) {
     return varying<T,A>(std::move(v));
   }
 
@@ -93,14 +96,14 @@ namespace rts {
   }
 
   template <class T, class A>
-  RTS_ALWAYS_INLINE void if_(const vec<bool,A> & v, T t) {
+  RTS_ALWAYS_INLINE void if_(const vec<bool,A> & v, T t) noexcept(noexcept(t())) {
     detail::execution_mask_scope<A> scope;
     if (any(execution_mask<A> &= v))
       t();
   }
 
   template <class T, class F, class A>
-  RTS_ALWAYS_INLINE void if_(const vec<bool,A> & v, T t, F f) {
+  RTS_ALWAYS_INLINE void if_(const vec<bool,A> & v, T t, F f) noexcept(noexcept(t()) && noexcept(f())) {
     detail::execution_mask_scope<A> scope;
     if (any(execution_mask<A> &= v))
       t();
@@ -109,24 +112,24 @@ namespace rts {
   }
 
   template <class T>
-  RTS_ALWAYS_INLINE void if_(bool v, T t) {  
+  RTS_ALWAYS_INLINE void if_(bool v, T t) noexcept(noexcept(t())) {
     if (v) t();
   }
 
   template <class T, class F>
-  RTS_ALWAYS_INLINE void if_(bool v, T t, F f) {  
+  RTS_ALWAYS_INLINE void if_(bool v, T t, F f) noexcept(noexcept(t()) && noexcept(f())) {
     if (v) t(); else f();
   }
 } // namespace rts
 
 namespace std {
   template <std::size_t i, class T, class A>
-  RTS_ALWAYS_INLINE RTS_PURE auto get(rts::varying<T,A> & v) noexcept {
+  RTS_ALWAYS_INLINE RTS_PURE auto get(rts::varying<T,A> & v) noexcept(noexcept(v.get(i))) {
     static_assert(i < A::width,"index out of bounds");
     return v.get(i);
   }
   template <std::size_t i, class T, class A>
-  RTS_ALWAYS_INLINE RTS_PURE auto get(const rts::varying<T,A> & v) noexcept {
+  RTS_ALWAYS_INLINE RTS_PURE auto get(const rts::varying<T,A> & v) noexcept(noexcept(v.get(i))) {
     static_assert(i < A::width,"index out of bounds");
     return v.get(i);
   }
