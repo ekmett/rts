@@ -1719,6 +1719,13 @@ namespace rts {
     }
   }
 
+  #if __APPLE__
+  #ifdef math_errhandling
+  #undef math_errhandling
+  #endif
+  #define math_errhandling MATH_ERREXCEPT
+  #endif
+
   #if math_errhandling & MATH_ERREXCEPT
     #define RTS_MATH_NOEXCEPT 
   #else
