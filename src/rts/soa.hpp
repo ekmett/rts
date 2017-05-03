@@ -218,8 +218,8 @@ namespace rts {
         S base; \
         template <class X> \
         RTS_ALWAYS_INLINE soa_unary_math_##fun(X && base) noexcept : base(std::forward(base)) {} \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) const RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) const RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
       }; \
     } \
     template <class S, std::size_t N, class A> \
@@ -240,8 +240,8 @@ namespace rts {
         T rhs; \
         template <class X, class Y> \
         RTS_ALWAYS_INLINE constexpr soa_binary_math_##fun(X && lhs, Y && rhs) noexcept : lhs(std::forward(lhs)), rhs(std::forward(rhs)) {} \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i),rhs.vget(i)); } \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i, mask),rhs.vget(i, mask)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) const RTS_MATH_NOEXCEPT { return fun(lhs.vget(i),rhs.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) const RTS_MATH_NOEXCEPT { return fun(lhs.vget(i, mask),rhs.vget(i, mask)); } \
       }; \
     } \
     template <class S, class T, std::size_t N, class A> \
@@ -263,8 +263,8 @@ namespace rts {
         U u; \
         template <class X, class Y, class Z>  \
         RTS_ALWAYS_INLINE constexpr soa_ternary_math_##fun(X && s, Y && t, Z && u) noexcept : s(std::forward(s)), t(std::forward(t)), u(std::forward(u)) {} \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(s.vget(i),t.vget(i),u.vget(i)); } \
-        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(s.vget(i, mask),t.vget(i, mask),u.vget(i, mask)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) const RTS_MATH_NOEXCEPT { return fun(s.vget(i),t.vget(i),u.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) const RTS_MATH_NOEXCEPT { return fun(s.vget(i, mask),t.vget(i, mask),u.vget(i, mask)); } \
       }; \
     } \
     template <class S, class T, class U, std::size_t N, class A> \
