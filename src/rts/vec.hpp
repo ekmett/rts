@@ -1306,31 +1306,28 @@ namespace rts {
     RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
 
-    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return iterator(this); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return iterator(this+1); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return const_iterator(this); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return const_iterator(this+1); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return const_iterator(this); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return const_iterator(this+1); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return begin()[i]; }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return begin()[i]; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
     
-    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept { return make_pair(first.get(i), second.get(i)); }
-    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept { return make_pair(first.get(i),second.get(i)); }
+    RTS_ALWAYS_INLINE RTS_PURE RTS_MUTABLE_CONSTEXPR auto get(int i) noexcept(noexcept(make_pair(first.get(i), second.get(i)))) { return make_pair(first.get(i), second.get(i)); }
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept(noexcept(make_pair(first.get(i),second.get(i)))) { return make_pair(first.get(i),second.get(i)); }
 
-    RTS_ALWAYS_INLINE void put(int i, const std::pair<S,T> & v) noexcept {
+    RTS_ALWAYS_INLINE void put(int i, const std::pair<S,T> & v) noexcept(noexcept(first.put(i, v.first))) {
       first.put(i, v.first);
       second.put(i,v.second);
     }
 
-    RTS_ALWAYS_INLINE void swap(vec & that) noexcept {
+    RTS_ALWAYS_INLINE void swap(vec & that) noexcept(noexcept(std::swap(first,that.first))) {
       std::swap(first,that.first);
       std::swap(second,that.second);
     }
   };
-
-
-
 
   template <class A, class ... Ts>
   struct vec<std::tuple<Ts...>, A> {
@@ -1355,46 +1352,46 @@ namespace rts {
     RTS_ALWAYS_INLINE vec & operator=(const vec & rhs) noexcept = default;
     RTS_ALWAYS_INLINE vec & operator=(vec && rhs) noexcept = default;
 
-    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return iterator(this); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return iterator(this+1); }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return iterator(this); }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return iterator(this+1); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return const_iterator(this); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return const_iterator(this+1); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return const_iterator(this); }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return const_iterator(this+1); }
-    RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return begin()[i]; }
+    RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return begin()[i]; }
     RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
     
-    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept {
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) noexcept(noexcept(std::get<0>(data).get(0))) {
       return detail::index_apply<std::tuple_size<value_type>{}>(
         [&](auto... Is) { return std::make_tuple(std::get<Is>(data).get(i)...); }
       );
     }
 
-    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept {
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto get(int i) const noexcept(noexcept(std::get<0>(data).get(0))) {
       return detail::index_apply<std::tuple_size<value_type>{}>(
         [&](auto... Is) { return std::make_tuple(std::get<Is>(data).get(i)...); }
       );
     }
 
-    RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept {
+    RTS_ALWAYS_INLINE void put(int i, const std::tuple<Ts...> & v) noexcept(noexcept(detail::put1<Is>(data,i,v))) {
       detail::index_apply<std::tuple_size<value_type>{}>(
         [&](auto... Is) { RTS_UNUSED auto l = { detail::put1<Is>(data,i,v)... }; }
       );
     }
 
-    RTS_ALWAYS_INLINE void swap(vec & that) noexcept {
+    RTS_ALWAYS_INLINE void swap(vec & that) noexcept(noexcept(std::swap(data,that.data))) {
       std::swap(data,that.data);
     }
   };
 
 
   template <class T, class A>
-  RTS_ALWAYS_INLINE RTS_PURE const vec<T&,A> operator * (const vec<T*,A> & ps) noexcept {
+  RTS_ALWAYS_INLINE RTS_PURE constexpr const vec<T&,A> operator * (const vec<T*,A> & ps) noexcept(noexcept(vec<T&,A>(ps, detail::indirection_tag))) {
     return vec<T&,A>(ps, detail::indirection_tag);
   }
 
   template <class T, class A>
-  RTS_ALWAYS_INLINE RTS_PURE vec<T&,A> operator * (vec<T*,A> & ps) noexcept {
+  RTS_ALWAYS_INLINE RTS_PURE constexpr vec<T&,A> operator * (vec<T*,A> & ps) noexcept(noexcept(vec<T&,A>(ps, detail::indirection_tag))) {
     return vec<T&,A>(ps, detail::indirection_tag);
   }
 
@@ -1404,7 +1401,7 @@ namespace rts {
 
 #define RTS_OP(op) \
   template <class T, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l) noexcept(noexcept(vec<decltype(op l.get(0)),A>().put(0,op l.get(0)))) { \
     vec<decltype(op l.get(0)),A> result; \
     for (int i =0;i<A::width;++i) result.put(i,op l.get(i)); \
     return result; \
@@ -1419,19 +1416,19 @@ namespace rts {
 
 #define RTS_BINOP(op) \
   template <class T, class U, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, const vec<U,A> & r) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, const vec<U,A> & r) noexcept(noexcept(vec<decltype(l.get(0) op r.get(0)), A>().put(0, l.get(0) op r.get(0)))) { \
     vec<decltype(l.get(0) op r.get(0)), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l.get(i) op r.get(i)); \
     return result; \
   } \
   template <class T, class U, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, U r) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, U r) noexcept(noexcept(vec<decltype(l.get(0) op r), A>().put(0, l.get(0) op r))) { \
     vec<decltype(l.get(0) op r), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l.get(i) op r); \
     return result; \
   } \
   template <class T, class U, class A> \
-  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (T l, const vec<U, A> & r) noexcept { \
+  RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (T l, const vec<U, A> & r) noexcept(noexcept(vec<decltype(l op r.get(0)), A>().put(0, l op r.get(0)))) { \
     vec<decltype(l op r.get(0)), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l op r.get(i)); \
     return result; \
@@ -1689,7 +1686,7 @@ namespace rts {
     }
 
     template <size_t i, class T, class A>
-    RTS_ALWAYS_INLINE void put(vec<T,A> & lhs, const T & rhs) noexcept {
+    RTS_ALWAYS_INLINE void put(vec<T,A> & lhs, const T & rhs) noexcept(noexcept(lhs.put(i,rhs))) {
       static_assert(i < A::width, "index out of bounds");
       lhs.put(i, rhs);
     }
@@ -1742,13 +1739,13 @@ namespace std {
   #undef RTS_BINARY_MATH
 
   template <std::size_t i, class T, class A>
-  RTS_ALWAYS_INLINE RTS_PURE auto get(rts::vec<T,A> & v) noexcept {
+  RTS_ALWAYS_INLINE RTS_PURE auto get(rts::vec<T,A> & v) noexcept(noexcept(v.get(i))) {
     static_assert(i < A::width, "index out of bounds");
     return v.get(i);
   }
 
   template <std::size_t i, class T, class A>
-  RTS_ALWAYS_INLINE RTS_PURE auto get(const rts::vec<T,A> & v) noexcept {
+  RTS_ALWAYS_INLINE RTS_PURE auto get(const rts::vec<T,A> & v) noexcept(noexcept(v.get(i))) {
     static_assert(i < A::width, "index out of bounds");
     return v.get(i);
   }
