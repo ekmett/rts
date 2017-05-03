@@ -78,10 +78,14 @@ namespace rts {
       return make_varying(fun(vec<U,A>(v), vec<V,A>(v))); \
     }
 
+  #define RTS_TERNARY_MATH(fun) \
+    template <class U, class V, class W, class A> \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const varying<U,A> & u, const varying<V,A> & v, const varying<W,A> & w) RTS_MATH_NOEXCEPT { \
+      return make_varying(fun(vec<U,A>(v), vec<V,A>(v), vec<W,A>(w))); \
+    }
+
   #include "x-math.hpp"
 
-  #undef RTS_UNARY_MATH
-  #undef RTS_BINARY_MATH
 
   namespace detail {
     template <class A>

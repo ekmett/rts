@@ -1,3 +1,15 @@
+#ifndef RTS_UNARY_MATH
+#define RTS_UNARY_MATH(fun)
+#endif
+
+#ifndef RTS_BINARY_MATH
+#define RTS_BINARY_MATH(fun)
+#endif 
+
+#ifndef RTS_TERNARY_MATH
+#define RTS_TERNARY_MATH(fun)
+#endif 
+
 // <cmath>
 
 RTS_UNARY_MATH(sin)
@@ -34,6 +46,7 @@ RTS_BINARY_MATH(fmin)
 RTS_BINARY_MATH(fmax)
 RTS_BINARY_MATH(fmod)
 RTS_BINARY_MATH(remainder)
+RTS_TERNARY_MATH(fma)
 
 // <complex>
 
@@ -45,3 +58,7 @@ RTS_UNARY_MATH(conj)
 RTS_UNARY_MATH(proj)
 RTS_UNARY_MATH(polar)
 RTS_BINARY_MATH(polar)
+
+#undef RTS_UNARY_MATH
+#undef RTS_BINARY_MATH
+#undef RTS_TERNARY_MATH

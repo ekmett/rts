@@ -1740,9 +1740,8 @@ namespace rts {
 
   #define RTS_UNARY_MATH(fun) using std::fun;
   #define RTS_BINARY_MATH(fun) using std::fun;
+  #define RTS_TERNARY_MATH(fun) using std::fun;
   #include "x-math.hpp"
-  #undef RTS_UNARY_MATH
-  #undef RTS_BINARY_MATH
 
   using std::get;
   using std::tuple_size;
@@ -1767,10 +1766,17 @@ namespace std {
         result[i] = fun(u[i],v[i]); \
       return result; \
     }
+  #define RTS_TERNARY_MATH(fun) \
+    using std::fun; \
+    template <class U, class V, class W, class A> \
+    RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<U,A> & u, const rts::vec<V,A> & v, const rts::vec<W,A> & w) RTS_MATH_NOEXCEPT { \
+      rts::vec<decltype(fun(U(),V(),W())),A> result; \
+      for (int i=0;i<A::width;++i) \
+        result[i] = fun(u[i],v[i],w[i]); \
+      return result; \
+    }
   
   #include "x-math.hpp"
-  #undef RTS_UNARY_MATH
-  #undef RTS_BINARY_MATH
 
   template <std::size_t i, class T, class A>
   RTS_ALWAYS_INLINE RTS_PURE auto get(rts::vec<T,A> & v) noexcept(noexcept(v.get(i))) {

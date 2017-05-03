@@ -216,8 +216,8 @@ namespace rts {
       struct soa_unary_math_##fun : public soa_expr<soa_unary_math_##fun<S,N,A>,N,A> { \
         using vector = decltype(fun(std::declval<typename S::vector>)); \
         S base; \
-        RTS_ALWAYS_INLINE constexpr soa_unary_math_##fun(const S & base) noexcept : base(base) {} \
-        RTS_ALWAYS_INLINE soa_unary_math_##fun(S && base) noexcept : base(std::move(base)) {} \
+        template <class X> \
+        RTS_ALWAYS_INLINE soa_unary_math_##fun(X && base) noexcept : base(std::forward(base)) {} \
         RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
         RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(base.vget(i)); } \
       }; \
@@ -238,8 +238,8 @@ namespace rts {
         using vector = decltype(fun(std::declval<typename S::vector>,std::declval<typename T::vector>)); \
         S lhs; \
         T rhs; \
-        RTS_ALWAYS_INLINE constexpr soa_binary_math_##fun(const S & lhs, const T & rhs) noexcept : lhs(lhs), rhs(rhs) {} \
-        RTS_ALWAYS_INLINE soa_binary_math_##fun(S && lhs, T && rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {} \
+        template <class X, class Y> \
+        RTS_ALWAYS_INLINE constexpr soa_binary_math_##fun(X && lhs, Y && rhs) noexcept : lhs(std::forward(lhs)), rhs(std::forward(rhs)) {} \
         RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i),rhs.vget(i)); } \
         RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(lhs.vget(i, mask),rhs.vget(i, mask)); } \
       }; \
@@ -253,10 +253,31 @@ namespace rts {
       return detail::soa_binary_math_##fun<S,T,N,A>(lhs(), rhs()); \
     }
 
-  #include "x-math.hpp"
+  #define RTS_TERNARY_MATH(fun) \
+    namespace detail { \
+      template <class S, class T, class U, std::size_t N, class A = default_isa> \
+      struct soa_ternary_math_##fun : public soa_expr<soa_ternary_math_##fun<S,T,U,N,A>,N,A> { \
+        using vector = decltype(fun(std::declval<typename S::vector>,std::declval<typename T::vector>)); \
+        S s; \
+        T t; \
+        U u; \
+        template <class X, class Y, class Z>  \
+        RTS_ALWAYS_INLINE constexpr soa_ternary_math_##fun(X && s, Y && t, Z && u) noexcept : s(std::forward(s)), t(std::forward(t)), u(std::forward(u)) {} \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i) RTS_MATH_NOEXCEPT { return fun(s.vget(i),t.vget(i),u.vget(i)); } \
+        RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr vector vget(int i, const vec<bool,A> & mask) RTS_MATH_NOEXCEPT { return fun(s.vget(i, mask),t.vget(i, mask),u.vget(i, mask)); } \
+      }; \
+    } \
+    template <class S, class T, class U, std::size_t N, class A> \
+    RTS_ALWAYS_INLINE RTS_PURE constexpr auto fun(const detail::soa_expr<S,N,A> & s, const detail::soa_expr<T,N,A> & t, const detail::soa_expr<U,N,A> & u) noexcept { \
+      return detail::soa_ternary_math_##fun<S,T,U,N,A>(s(), t(), u()); \
+    } \
+    template <class S, class T, class U, std::size_t N, class A> \
+    RTS_ALWAYS_INLINE auto fun(detail::soa_expr<S,N,A> && s, detail::soa_expr<T,N,A> && t, detail::soa_expr<U,N,A> && u) noexcept { \
+      return detail::soa_ternary_math_##fun<S,T,U,N,A>(s(), t(), u()); \
+    }
 
-  #undef RTS_UNARY_MATH
-  #undef RTS_BINARY_MATH
+
+  #include "x-math.hpp"
 } // namespace rts
 
 namespace std {
