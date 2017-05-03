@@ -1218,14 +1218,18 @@ namespace rts {
 
 
   namespace detail {
+    // polyfill, missing on clang
+    template<std::size_t... Ints> using index_sequence = std::integer_sequence<std::size_t, Ints...>;
+    template<std::size_t N> using make_index_sequence = std::make_integer_sequence<std::size_t, N>;
+
     template <class F, std::size_t... Is>
-    RTS_ALWAYS_INLINE constexpr auto index_apply_impl(F f, std::index_sequence<Is...>) noexcept(noexcept(f(std::integral_constant<std::size_t, Is> {}...))) {
+    RTS_ALWAYS_INLINE constexpr auto index_apply_impl(F f, index_sequence<Is...>) noexcept(noexcept(f(std::integral_constant<std::size_t, Is> {}...))) {
       return f(std::integral_constant<std::size_t, Is> {}...);
     }
 
     template <std::size_t N, class F>
-    RTS_ALWAYS_INLINE constexpr auto index_apply(F f) noexcept(noexcept(index_apply_impl(f, std::make_index_sequence<N>{}))) {
-      return index_apply_impl(f, std::make_index_sequence<N>{});
+    RTS_ALWAYS_INLINE constexpr auto index_apply(F f) noexcept(noexcept(index_apply_impl(f, make_index_sequence<N>{}))) {
+      return index_apply_impl(f, make_index_sequence<N>{});
     }
 
     template <std::size_t I, typename T, typename V> 
