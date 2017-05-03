@@ -139,8 +139,8 @@ namespace rts {
 
     T data [arch::width];
 
-    RTS_ALWAYS_INLINE constexpr vec() noexcept(std::is_nothrow_default_constructible<T>::value) = default;
-    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible<T>::value) = default;
+    RTS_ALWAYS_INLINE constexpr vec() noexcept(std::is_nothrow_default_constructible<T>::value) : data() {}
+    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible<T>::value) : data(rhs.data) {}
     RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_assignable<T,const T&>::value) : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
     RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> il) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_copy_assignable<T>::value) : data() { std::copy(il.begin(), il.end(), data); }
 
