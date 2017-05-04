@@ -204,6 +204,14 @@ namespace rts {
     RTS_ASSIGN(|=)
     RTS_ASSIGN(^=)
     #undef RTS_ASSIGN
+
+    template <int count>
+    RTS_ALWAYS_INLINE RTS_PURE constexpr vec shift_right() const noexcept { return *this >> count; }
+
+    template <int count>
+    RTS_ALWAYS_INLINE RTS_PURE constexpr vec shift_left() const noexcept { return *this << count; }
+
+
   }; // vec<T,A>
 
   // --------------------------------------------------------------------------------
@@ -688,7 +696,6 @@ namespace rts {
         static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
       }
 
-
       RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return d; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return d + arch::width; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
@@ -700,6 +707,12 @@ namespace rts {
       RTS_ALWAYS_INLINE RTS_CONST constexpr reference get(int i) noexcept { return d[i]; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
       RTS_ALWAYS_INLINE void put (int i, std::int32_t v) noexcept { d[i] = v; }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_right() const noexcept { return vec(_mm_srai_epi32(m,count)); }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_left() const noexcept { return vec(_mm_slli_epi32(m,count)); }
 
       RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
       RTS_ALWAYS_INLINE vec & operator ^= (const vec & rhs) noexcept { m = _mm_xor_si128(m,rhs.m); return *this; }
@@ -755,12 +768,20 @@ namespace rts {
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t a, std::int32_t b, std::int32_t c, std::int32_t d,
           std::int32_t e, std::int32_t f, std::int32_t g, std::int32_t h) noexcept : d{a,b,c,d,e,f,g,h} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m) : m(m) {}
+
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
 
       template <class U>
       RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
         static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
       }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_right() const noexcept { return vec(_mm256_srai_epi32(m,count)); }
+
+            template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_left() const noexcept { return vec(_mm256_slli_epi32(m,count)); }
 
 
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
@@ -803,6 +824,167 @@ namespace rts {
       }
     };
   #endif
+
+  #ifdef __AVX__
+    template <>
+    struct vec<std::uint32_t, target::avx_4> {
+      using arch = target::avx_4;
+      using size_type = std::size_t;
+      using difference_type = std::ptrdiff_t;
+      using value_type = std::uint32_t;
+      using reference = value_type &;
+      using const_reference = const value_type &;
+      using pointer = value_type *;
+      using const_pointer = const value_type *;
+      using iterator = pointer;
+      using const_iterator = const value_type *;
+
+      union {
+        __m128i m;
+        std::uint32_t d[4];
+      };
+
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0} {}
+      RTS_ALWAYS_INLINE constexpr vec(std::uint32_t i) noexcept : d{i,i,i,i} {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
+      RTS_ALWAYS_INLINE constexpr vec(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) noexcept : d{a,b,c,d} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128i m) noexcept : m(m) {}
+      RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
+
+      RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr reference get(int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE void put (int i, std::uint32_t v) noexcept { d[i] = v; }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_right() const noexcept { return vec(_mm_srli_epi32(m,count)); }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_left() const noexcept { return vec(_mm_slli_epi32(m,count)); }
+
+
+      RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
+      RTS_ALWAYS_INLINE vec & operator ^= (const vec & rhs) noexcept { m = _mm_xor_si128(m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm_add_epi32(m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm_mullo_epi32(m,rhs.m); return *this; }
+
+      RTS_ALWAYS_INLINE vec & operator ++ () noexcept {
+        for (auto && r : d) ++r;
+        return *this;
+      }
+
+      RTS_ALWAYS_INLINE vec operator ++ (int) noexcept {
+        vec t(*this);
+        operator++();
+        return t;
+      }
+
+      RTS_ALWAYS_INLINE vec & operator -- () noexcept {
+        for (auto && r : d) --r;
+        return *this;
+      }
+
+      RTS_ALWAYS_INLINE vec operator -- (int) noexcept {
+        vec t(*this);
+        operator--();
+        return t;
+      }
+    };
+  #endif
+
+  #ifdef __AVX2__
+    template <>
+    struct vec<std::uint32_t, target::avx2_8> {
+      using arch = target::avx2_8;
+      using size_type = std::size_t;
+      using difference_type = std::ptrdiff_t;
+      using value_type = std::uint32_t;
+      using reference = value_type &;
+      using const_reference = const value_type &;
+      using pointer = value_type *;
+      using const_pointer = const value_type *;
+      using iterator = pointer;
+      using const_iterator = const value_type *;
+
+      union {
+        __m256i m;
+        struct { __m128i l,h; };
+        std::uint32_t d[8];
+      };
+
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0,0,0,0,0} {}
+      RTS_ALWAYS_INLINE constexpr vec(std::uint32_t i) noexcept : d{i,i,i,i,i,i,i,i} {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
+      RTS_ALWAYS_INLINE constexpr vec(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d,
+          std::uint32_t e, std::uint32_t f, std::uint32_t g, std::uint32_t h) noexcept : d{a,b,c,d,e,f,g,h} {}
+      RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m): m(m) {}
+
+      template <class U>
+      RTS_ALWAYS_INLINE constexpr vec(const vec<U,arch> & rhs, detail::reinterpret_t) noexcept : m(reinterpret_cast<vec*>(&rhs)->m) {
+        static_assert(sizeof(vec<U,arch>) == sizeof(vec),"size mismatch");
+      }
+
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return begin()[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference get(int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE void put (int i, std::uint32_t v) noexcept { d[i] = v; }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_right() const noexcept { return vec(_mm256_srli_epi32(m,count)); }
+
+      template <int count>
+      RTS_ALWAYS_INLINE RTS_PURE vec shift_left() const noexcept { return vec(_mm256_slli_epi32(m,count)); }
+
+
+      RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
+      RTS_ALWAYS_INLINE vec & operator ^= (const vec & rhs) noexcept { m = _mm256_xor_si256(m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm256_add_epi32(m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm256_mullo_epi32(m,rhs.m); return *this; }
+
+      RTS_ALWAYS_INLINE vec & operator ++ () noexcept {
+        for (auto && r : d) ++r;
+        return *this;
+      }
+
+      RTS_ALWAYS_INLINE vec operator ++ (int) noexcept {
+        vec t(*this);
+        operator++();
+        return t;
+      }
+
+      RTS_ALWAYS_INLINE vec & operator -- () noexcept {
+        for (auto && r : d) --r;
+        return *this;
+      }
+
+      RTS_ALWAYS_INLINE vec operator -- (int) noexcept {
+        vec t(*this);
+        operator--();
+        return t;
+      }
+    };
+  #endif
+
 
   #ifdef __AVX__
     template <>
@@ -1563,6 +1745,26 @@ namespace rts {
       if (i != A::width - 1) os << ',';
     }
     return os << '}';
+  }
+
+  template <class T, class A>
+  RTS_ALWAYS_INLINE RTS_PURE constexpr vec<T,A> operator >>(const vec<T,A> & v, int count) noexcept(
+    std::is_nothrow_default_constructible<vec<T,A>>::value && noexcept(v[0] >> 0)
+  ) { 
+    vec<T,A> result;
+    for (int i=0;i<A::width;++i)
+      result[i] = v[i] >> count;
+    return result;
+  }
+
+  template <class T, class A>
+  RTS_ALWAYS_INLINE RTS_PURE constexpr vec<T,A> operator <<(const vec<T,A> & v, int count) noexcept(
+    std::is_nothrow_default_constructible<vec<T,A>>::value && noexcept(v[0] << 0)
+  ) { 
+    vec<T,A> result;
+    for (int i=0;i<A::width;++i)
+      result[i] = v[i] << count;
+    return result;
   }
 
   namespace detail {
