@@ -393,6 +393,10 @@ namespace rts {
     }
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<bool>
+  // --------------------------------------------------------------------------------
+
   // default partial template specialization for boolean masks
   template <class A>
   struct vec<bool,A> {
@@ -644,6 +648,10 @@ namespace rts {
     template <class T, class A> struct loader : base_loader<T,A> {};
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<int_t>
+  // --------------------------------------------------------------------------------
+
   #ifdef __AVX__
     template <>
     struct vec<std::int32_t, target::avx_4> {
@@ -779,6 +787,10 @@ namespace rts {
     };
   #endif
 
+  // --------------------------------------------------------------------------------
+  // * vec<float>
+  // --------------------------------------------------------------------------------
+
   #ifdef __AVX__
     template <>
     struct vec<float, target::avx_4> {
@@ -865,6 +877,10 @@ namespace rts {
       RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm256_mul_ps(m,rhs.m); return *this; }
     };
   #endif
+
+  // --------------------------------------------------------------------------------
+  // * vec<T*>
+  // --------------------------------------------------------------------------------
 
   #ifdef __AVX__
     // we need vec<T * const,avx2_8> as well
@@ -1129,6 +1145,10 @@ namespace rts {
     // TODO: add left ptrdiff addition, and nullptr comparisons to vec<T,A>::pointer
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<T&>
+  // --------------------------------------------------------------------------------
+
   // overloaded reference type for references, as endorsed by the department of redundancy department
   template <class T, class A>
   struct vec<T&,A> {
@@ -1255,6 +1275,10 @@ namespace rts {
     }
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<complex>
+  // --------------------------------------------------------------------------------
+
   template <class T, class A>
   struct vec<std::complex<T>,A> {
     using arch = A;
@@ -1304,6 +1328,10 @@ namespace rts {
       std::swap(imag,that.imag);
     }
   };
+
+  // --------------------------------------------------------------------------------
+  // * vec<pair>
+  // --------------------------------------------------------------------------------
 
   template <class S, class T, class A>
   struct vec<std::pair<S,T>,A> {
@@ -1355,6 +1383,10 @@ namespace rts {
       std::swap(second,that.second);
     }
   };
+
+  // --------------------------------------------------------------------------------
+  // * vec<tuple>
+  // --------------------------------------------------------------------------------
 
   template <class A, class ... Ts>
   struct vec<std::tuple<Ts...>, A> {
@@ -1423,7 +1455,7 @@ namespace rts {
   }
 
   // -------------------------------------------------------------------------------
-  // template implementation details
+  // * vec template implementation details
   // -------------------------------------------------------------------------------
 
 #define RTS_OP(op) \
@@ -1747,9 +1779,13 @@ namespace rts {
   using std::get;
   using std::tuple_size;
   using std::tuple_element;
-}
+} // namespace rts
 
 namespace std {
+  // --------------------------------------------------------------------------------
+  // * std vec
+  // --------------------------------------------------------------------------------
+
   #define RTS_UNARY_MATH(fun) \
     template <class T, class A> \
     RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<T,A> & v) RTS_MATH_NOEXCEPT { \
