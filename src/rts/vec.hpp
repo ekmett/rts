@@ -16,7 +16,7 @@ namespace rts {
 
   // helper for generic<N>
   namespace detail {
-    static const struct internal_t {} internal_tag = {};
+    static constexpr struct internal_t {} internal_tag = {};
     static const struct indirection_t {} indirection_tag = {};
     static const struct step_t {} step_tag = {};
     static RTS_CONST constexpr int ilog2(int v) { // intended for constexpr use
@@ -153,7 +153,7 @@ namespace rts {
       T v = u;
       for (auto && r : data) r = v++;
     }
-    RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
+    //RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
 
     template <class U>
     RTS_ALWAYS_INLINE vec & operator=(vec<U,A> & rhs) noexcept(noexcept(data[0] = rhs.get(0))) {
@@ -168,10 +168,10 @@ namespace rts {
       return *this;
     }
 
-    RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable<T>::value) {
-      data = std::move(rhs.data);
-      return *this;
-    }
+    //RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable<T>::value) {
+    //  data = std::move(rhs.data);
+    //  return *this;
+    //}
 
     RTS_ALWAYS_INLINE void swap(vec & rhs) noexcept(noexcept(std::swap(data,rhs.data))) {
       std::swap(data,rhs.data);
@@ -701,6 +701,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0} {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t i) noexcept : d{i,i,i,i} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128i m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t a, std::int32_t b, std::int32_t c, std::int32_t d) noexcept : d{a,b,c,d} {}
       RTS_ALWAYS_INLINE constexpr vec(__m128i m) noexcept : m(m) {}
@@ -776,6 +777,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0,0,0,0,0} {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t i) noexcept : d{i,i,i,i,i,i,i,i} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t a, std::int32_t b, std::int32_t c, std::int32_t d,
           std::int32_t e, std::int32_t f, std::int32_t g, std::int32_t h) noexcept : d{a,b,c,d,e,f,g,h} {}
@@ -854,6 +856,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0.f,0.f,0.f,0.f} {}
       RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128 m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d) noexcept : d{a,b,c,d} {}
       RTS_ALWAYS_INLINE vec(vec && rhs) : m(std::move(rhs.m)) {}
@@ -906,6 +909,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f} {}
       RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f,f,f,f,f} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256 m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d, float e, float f, float g, float h) noexcept : d{a,b,c,d,e,f,g,h} {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
