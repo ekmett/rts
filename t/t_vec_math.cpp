@@ -39,9 +39,9 @@ void require_approx_eq (const vec<T,A> & u, const vec<T,A> & v) {
     SECTION("cos") { require_approx_eq( c, vec<float,A>(std::cos((float)x))); } \
   }
 
-#define MIN std::numeric_limits<float>::min()
-#define MAX std::numeric_limits<float>::max()
-#define MIN_SUBNORM std::numeric_limits<float>::denorm_min()
+#define RTS_MIN std::numeric_limits<float>::min()
+#define RTS_MAX std::numeric_limits<float>::max()
+#define RTS_MIN_SUBNORM std::numeric_limits<float>::denorm_min()
 
 // Sources of interesting test values:
 // from glibc [1]
@@ -74,9 +74,9 @@ template <class A> void arch_test() {
       RTS_TEST(log, 0x0.ffffffffffffffffp0 );
       RTS_TEST(log, 0x0.ffffffffffffffffffffffffffcp0 );
       RTS_TEST(log, 0x0.ffffffffffffffffffffffffffff8p0 );
-      RTS_TEST(log, MIN );
-      //RTS_TEST(log, MIN_SUBNORM ); //FAIL -87.33655f == Approx( -103.2789306641 )
-      RTS_TEST(log, MAX );
+      RTS_TEST(log, RTS_MIN );
+      //RTS_TEST(log, RTS_MIN_SUBNORM ); //FAIL -87.33655f == Approx( -103.2789306641 )
+      RTS_TEST(log, RTS_MAX );
       RTS_TEST(log, 0xb.0d5dfp-4 );
       RTS_TEST(log, 0x1.6c3f6p+0 );
       RTS_TEST(log, 0xa.ae688p-4 );
@@ -107,10 +107,10 @@ template <class A> void arch_test() {
       RTS_TEST(exp, -1234 );
       //RTS_TEST(exp, 0x2.c679d1f73f0fb628p+8 ); //FAIL 240614362739678911180052727245270155264.0f == Approx( inf )
       //RTS_TEST(exp, 1e5 ); //FAIL 240614362739678911180052727245270155264.0f == Approx( inf )
-      //RTS_TEST(exp, MAX ); //FAIL 240614362739678911180052727245270155264.0f == Approx( inf )
+      //RTS_TEST(exp, RTS_MAX ); //FAIL 240614362739678911180052727245270155264.0f == Approx( inf )
       RTS_TEST(exp, -7.4444006192138124e+02 );
       RTS_TEST(exp, -0x1.75f113c30b1c8p+9 );
-      RTS_TEST(exp, -MAX );
+      RTS_TEST(exp, -RTS_MAX );
       RTS_TEST(exp, -11342.8125 );
       RTS_TEST(exp, -0x2.c5b2319c4843acc0p12 );
       RTS_TEST(exp, -0x2.c469d9p+8 );
@@ -164,10 +164,10 @@ template <class A> void arch_test() {
       //RTS_TEST(exp, 0x2.c5c85fdf473de6af278ece600fccp+12 ); //FAIL 240614362739678911180052727245270155264.0f == Approx( inf )
       RTS_TEST(exp, -0x2.c5b2319c4843acbff21591e99cccp+12 );
       RTS_TEST(exp, -0x2.c5b2319c4843acbff21591e99ccap+12 );
-      RTS_TEST(exp, MIN );
-      RTS_TEST(exp, -MIN );
-      RTS_TEST(exp, MIN_SUBNORM );
-      RTS_TEST(exp, -MIN_SUBNORM );
+      RTS_TEST(exp, RTS_MIN );
+      RTS_TEST(exp, -RTS_MIN );
+      RTS_TEST(exp, RTS_MIN_SUBNORM );
+      RTS_TEST(exp, -RTS_MIN_SUBNORM );
       RTS_TEST(exp, -0x1.760cd14774bd9p+0 );
       RTS_TEST(exp, 0x1.4bed28p+0 );
       RTS_TEST(exp, -0x1.f1cf36p+8 );
@@ -232,12 +232,12 @@ template <class A> void arch_test() {
       RTS_TEST(sin, -0x1.02e34cp+0 );
       RTS_TEST(sin, 0xf.f0274p+4 );
       RTS_TEST(sin, 0x3.042d88p+0 );
-      //RTS_TEST(sin, MAX ); //FAIL -inff == Approx( -0.521876514 )
-      //RTS_TEST(sin, -MAX );  //FAIL inff == Approx( 0.521876514 )
-      RTS_TEST(sin, MIN );
-      RTS_TEST(sin, -MIN );
-      RTS_TEST(sin, MIN_SUBNORM );
-      RTS_TEST(sin, -MIN_SUBNORM );
+      //RTS_TEST(sin, RTS_MAX ); //FAIL -inff == Approx( -0.521876514 )
+      //RTS_TEST(sin, -RTS_MAX );  //FAIL inff == Approx( 0.521876514 )
+      RTS_TEST(sin, RTS_MIN );
+      RTS_TEST(sin, -RTS_MIN );
+      RTS_TEST(sin, RTS_MIN_SUBNORM );
+      RTS_TEST(sin, -RTS_MIN_SUBNORM );
       RTS_TEST(sin, 0x1.8475e5afd4481p+0 );
     }
 
@@ -298,12 +298,12 @@ template <class A> void arch_test() {
       RTS_TEST(cos, 0x1p-100 );
       RTS_TEST(cos, 0x1p-600 );
       //RTS_TEST(cos, 0x1p-10000 ); // avoid warning: magnitude of floating-point constant too small for type 'double'
-      //RTS_TEST(cos, MAX ); //FAIL -nanf == Approx( 0.8530210257 )
-      //RTS_TEST(cos, -MAX ); //FAIL -nanf == Approx( 0.8530210257 )
-      RTS_TEST(cos, MIN );
-      RTS_TEST(cos, -MIN );
-      RTS_TEST(cos, MIN_SUBNORM );
-      RTS_TEST(cos, -MIN_SUBNORM );
+      //RTS_TEST(cos, RTS_MAX ); //FAIL -nanf == Approx( 0.8530210257 )
+      //RTS_TEST(cos, -RTS_MAX ); //FAIL -nanf == Approx( 0.8530210257 )
+      RTS_TEST(cos, RTS_MIN );
+      RTS_TEST(cos, -RTS_MIN );
+      RTS_TEST(cos, RTS_MIN_SUBNORM );
+      RTS_TEST(cos, -RTS_MIN_SUBNORM );
       RTS_TEST(cos, -0x3.3de320f6be87ep+1020 );
       //RTS_TEST(cos, 0xe.9f1e5bc3bb88p+112 ); //FAIL -nanf == Approx( -0.6268894672 )
       //RTS_TEST(cos, 0x4.7857dp+68 ); //FAIL -nanf == Approx( -0.9921655655 )
@@ -360,10 +360,10 @@ template <class A> void arch_test() {
       RTS_TEST_SINCOS( 0xf.f0274p+4 );
       RTS_TEST_SINCOS( 0x3.042d88p+0 );
       // ...
-      RTS_TEST_SINCOS( MIN );
-      RTS_TEST_SINCOS( -MIN );
-      RTS_TEST_SINCOS( MIN_SUBNORM );
-      RTS_TEST_SINCOS( -MIN_SUBNORM );
+      RTS_TEST_SINCOS( RTS_MIN );
+      RTS_TEST_SINCOS( -RTS_MIN );
+      RTS_TEST_SINCOS( RTS_MIN_SUBNORM );
+      RTS_TEST_SINCOS( -RTS_MIN_SUBNORM );
       RTS_TEST_SINCOS( 0x1.8475e5afd4481p+0 );
       // from glibc - cos
       RTS_TEST_SINCOS( 0 );
@@ -407,10 +407,10 @@ template <class A> void arch_test() {
       RTS_TEST_SINCOS( 0x1p-100 );
       RTS_TEST_SINCOS( 0x1p-600 );
       // ...
-      RTS_TEST_SINCOS( MIN );
-      RTS_TEST_SINCOS( -MIN );
-      RTS_TEST_SINCOS( MIN_SUBNORM );
-      RTS_TEST_SINCOS( -MIN_SUBNORM );
+      RTS_TEST_SINCOS( RTS_MIN );
+      RTS_TEST_SINCOS( -RTS_MIN );
+      RTS_TEST_SINCOS( RTS_MIN_SUBNORM );
+      RTS_TEST_SINCOS( -RTS_MIN_SUBNORM );
       // ...
       RTS_TEST_SINCOS( -0x1.02e34cp+0 );
       RTS_TEST_SINCOS( 0xf.f0274p+4 );
