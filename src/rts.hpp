@@ -7,6 +7,8 @@
 #include "rts/soa.hpp"
 #include "rts/varying.hpp"
 #include "rts/vec.hpp"
+#include "rts/vec_intrinsics.hpp"
+#include "rts/vec_math.hpp"
 #include "rts/x86.hpp"
 
 /// @file rts.hpp

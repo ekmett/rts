@@ -16,7 +16,7 @@ namespace rts {
 
   // helper for generic<N>
   namespace detail {
-    static const struct internal_t {} internal_tag = {};
+    static constexpr struct internal_t {} internal_tag = {};
     static const struct indirection_t {} indirection_tag = {};
     static const struct step_t {} step_tag = {};
     static RTS_CONST constexpr int ilog2(int v) { // intended for constexpr use
@@ -140,7 +140,7 @@ namespace rts {
     T data [arch::width];
 
     RTS_ALWAYS_INLINE constexpr vec() noexcept(std::is_nothrow_default_constructible<T>::value) : data() {}
-    RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible<T>::value) : data(rhs.data) {}
+    //RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept(std::is_nothrow_copy_constructible<T>::value) : data(rhs.data) {} // error: array initializer
     RTS_ALWAYS_INLINE constexpr vec(const T & u) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_assignable<T,const T&>::value) : data() { for (auto && r : data) r = u; } // only constexpr if we can loop in constexpr
     RTS_ALWAYS_INLINE constexpr vec(std::initializer_list<T> il) noexcept(std::is_nothrow_default_constructible<T>::value && std::is_nothrow_copy_assignable<T>::value) : data() { std::copy(il.begin(), il.end(), data); }
 
@@ -153,7 +153,7 @@ namespace rts {
       T v = u;
       for (auto && r : data) r = v++;
     }
-    RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
+    //RTS_ALWAYS_INLINE vec(vec && rhs) noexcept = default;
 
     template <class U>
     RTS_ALWAYS_INLINE vec & operator=(vec<U,A> & rhs) noexcept(noexcept(data[0] = rhs.get(0))) {
@@ -168,10 +168,10 @@ namespace rts {
       return *this;
     }
 
-    RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable<T>::value) {
-      data = std::move(rhs.data);
-      return *this;
-    }
+    //RTS_ALWAYS_INLINE vec & operator=(vec<T,A> && rhs) noexcept(std::is_nothrow_move_assignable<T>::value) {
+    //  data = std::move(rhs.data);
+    //  return *this;
+    //}
 
     RTS_ALWAYS_INLINE void swap(vec & rhs) noexcept(noexcept(std::swap(data,rhs.data))) {
       std::swap(data,rhs.data);
@@ -183,7 +183,7 @@ namespace rts {
 
     #define RTS_ASSIGN(op) \
       template <class U> \
-      RTS_ALWAYS_INLINE vec & operator op (vec<U,A> & rhs) noexcept(noexcept(data[0] op rhs[0])) { \
+      RTS_ALWAYS_INLINE vec & operator op (const vec<U,A> & rhs) noexcept(noexcept(data[0] op rhs[0])) { \
         for (int i=0;i<A::width;++i) data[i] op rhs[i]; \
         return *this; \
       } \
@@ -392,6 +392,10 @@ namespace rts {
       return const_vref<T,A>(v,i);
     }
   }
+
+  // --------------------------------------------------------------------------------
+  // * vec<bool>
+  // --------------------------------------------------------------------------------
 
   // default partial template specialization for boolean masks
   template <class A>
@@ -644,6 +648,38 @@ namespace rts {
     template <class T, class A> struct loader : base_loader<T,A> {};
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<int_t>
+  // --------------------------------------------------------------------------------
+
+#define RTS_DEF_BINOP(op,fun) \
+      RTS_ALWAYS_INLINE RTS_PURE vec operator op (const vec & rhs) const noexcept { \
+        return vec(fun(m,rhs.m), detail::internal_tag); \
+      } \
+      RTS_ALWAYS_INLINE vec & operator op##= (const vec & rhs) noexcept { \
+        m = fun(m,rhs.m); \
+        return *this; \
+      }
+#define RTS_DEF_SHIFT(op,fun) \
+      RTS_ALWAYS_INLINE RTS_PURE vec operator op (const int & rhs) const noexcept { \
+        auto r = fun(m,rhs); \
+        return vec(r, detail::internal_tag); \
+      } \
+      RTS_ALWAYS_INLINE vec & operator op##= (const int & rhs) noexcept { \
+        m = fun(m,rhs); \
+        return *this; \
+      }
+#define RTS_DEF_SHIFT_FLOAT(op, fun, mm, bits) \
+      RTS_ALWAYS_INLINE RTS_PURE vec operator op (const int & rhs) const noexcept { \
+        auto r =  mm##_castsi##bits##_ps(fun(mm##_castps_si##bits(m),rhs)); \
+        return vec(r, detail::internal_tag); \
+      } \
+      RTS_ALWAYS_INLINE vec & operator op##= (const int & rhs) noexcept { \
+        m =  mm##_castsi##bits##_ps(fun(mm##_castps_si##bits(m),rhs)); \
+        return *this; \
+      }
+
+
   #ifdef __AVX__
     template <>
     struct vec<std::int32_t, target::avx_4> {
@@ -665,6 +701,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0} {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t i) noexcept : d{i,i,i,i} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128i m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t a, std::int32_t b, std::int32_t c, std::int32_t d) noexcept : d{a,b,c,d} {}
       RTS_ALWAYS_INLINE constexpr vec(__m128i m) noexcept : m(m) {}
@@ -683,9 +720,16 @@ namespace rts {
       RTS_ALWAYS_INLINE void put (int i, std::int32_t v) noexcept { d[i] = v; }
 
       RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
-      RTS_ALWAYS_INLINE vec & operator ^= (const vec & rhs) noexcept { m = _mm_xor_si128(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm_add_epi32(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm_mullo_epi32(m,rhs.m); return *this; }
+
+      RTS_DEF_BINOP(+, _mm_add_epi32)
+      RTS_DEF_BINOP(-, _mm_sub_epi32)
+      RTS_DEF_BINOP(*, _mm_mullo_epi32)
+      //RTS_DEF_BINOP(/, _mm_div_epi32) // in SVML
+      RTS_DEF_BINOP(&, _mm_and_si128)
+      RTS_DEF_BINOP(|, _mm_or_si128)
+      RTS_DEF_BINOP(^, _mm_xor_si128)
+      RTS_DEF_SHIFT(<<, _mm_slli_epi32)
+      RTS_DEF_SHIFT(>>, _mm_srli_epi32)
 
       RTS_ALWAYS_INLINE vec & operator ++ () noexcept {
         for (auto && r : d) ++r;
@@ -733,6 +777,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0,0,0,0,0} {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t i) noexcept : d{i,i,i,i,i,i,i,i} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(std::int32_t a, std::int32_t b, std::int32_t c, std::int32_t d,
           std::int32_t e, std::int32_t f, std::int32_t g, std::int32_t h) noexcept : d{a,b,c,d,e,f,g,h} {}
@@ -751,9 +796,16 @@ namespace rts {
       RTS_ALWAYS_INLINE void put (int i, std::int32_t v) noexcept { d[i] = v; }
 
       RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
-      RTS_ALWAYS_INLINE vec & operator ^= (const vec & rhs) noexcept { m = _mm256_xor_si256(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm256_add_epi32(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm256_mullo_epi32(m,rhs.m); return *this; }
+
+      RTS_DEF_BINOP(+, _mm256_add_epi32)
+      RTS_DEF_BINOP(-, _mm256_sub_epi32)
+      RTS_DEF_BINOP(*, _mm256_mullo_epi32)
+      //RTS_DEF_BINOP(/, _mm256_div_epi32) // in SVML
+      RTS_DEF_BINOP(&, _mm256_and_si256)
+      RTS_DEF_BINOP(|, _mm256_or_si256)
+      RTS_DEF_BINOP(^, _mm256_xor_si256)
+      RTS_DEF_SHIFT(<<, _mm256_slli_epi32)
+      RTS_DEF_SHIFT(>>, _mm256_srli_epi32)
 
       RTS_ALWAYS_INLINE vec & operator ++ () noexcept {
         for (auto && r : d) ++r;
@@ -779,6 +831,10 @@ namespace rts {
     };
   #endif
 
+  // --------------------------------------------------------------------------------
+  // * vec<float>
+  // --------------------------------------------------------------------------------
+
   #ifdef __AVX__
     template <>
     struct vec<float, target::avx_4> {
@@ -800,6 +856,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0.f,0.f,0.f,0.f} {}
       RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128 m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d) noexcept : d{a,b,c,d} {}
       RTS_ALWAYS_INLINE vec(vec && rhs) : m(std::move(rhs.m)) {}
@@ -816,9 +873,17 @@ namespace rts {
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
       RTS_ALWAYS_INLINE void put (int i, float v) noexcept { d[i] = v; }
       RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
-      RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm_add_ps(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator -= (const vec & rhs) noexcept { m = _mm_sub_ps(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm_mul_ps(m,rhs.m); return *this; }
+
+      RTS_DEF_BINOP(+, _mm_add_ps)
+      RTS_DEF_BINOP(-, _mm_sub_ps)
+      RTS_DEF_BINOP(*, _mm_mul_ps)
+      RTS_DEF_BINOP(/, _mm_div_ps)
+      // RTS_DEF_BINOP(&, _mm_and_si128)
+      // RTS_DEF_BINOP(|, _mm_or_si128)
+      // RTS_DEF_BINOP(^, _mm_xor_si128)
+      // RTS_DEF_SHIFT_FLOAT(<<, _mm_slli_epi32, _mm, 128)
+      // RTS_DEF_SHIFT_FLOAT(>>, _mm_srli_epi32, _mm, 128)
+
     };
   #endif
 
@@ -844,6 +909,7 @@ namespace rts {
 
       RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f} {}
       RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f,f,f,f,f} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256 m, detail::internal_t) noexcept : m(m) {}
       RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
       RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d, float e, float f, float g, float h) noexcept : d{a,b,c,d,e,f,g,h} {}
       RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
@@ -856,15 +922,29 @@ namespace rts {
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return d + arch::width; }
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return d[i]; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return d[i]; }
+
       RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference get(int i) noexcept { return d[i]; }
       RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
       RTS_ALWAYS_INLINE void put (int i, float v) noexcept { d[i] = v; }
+
       RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
-      RTS_ALWAYS_INLINE vec & operator += (const vec & rhs) noexcept { m = _mm256_add_ps(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator -= (const vec & rhs) noexcept { m = _mm256_sub_ps(m,rhs.m); return *this; }
-      RTS_ALWAYS_INLINE vec & operator *= (const vec & rhs) noexcept { m = _mm256_mul_ps(m,rhs.m); return *this; }
+
+      RTS_DEF_BINOP(+, _mm256_add_ps)
+      RTS_DEF_BINOP(-, _mm256_sub_ps)
+      RTS_DEF_BINOP(*, _mm256_mul_ps)
+      RTS_DEF_BINOP(/, _mm256_div_ps)
+      // RTS_DEF_BINOP(&, _mm256_and_si256)
+      // RTS_DEF_BINOP(|, _mm256_or_si256)
+      // RTS_DEF_BINOP(^, _mm256_xor_si256)
+      // RTS_DEF_SHIFT_FLOAT(<<, _mm256_slli_epi32, _mm256, 256)
+      // RTS_DEF_SHIFT_FLOAT(>>, _mm256_srli_epi32, _mm256, 256)
+
     };
   #endif
+
+  // --------------------------------------------------------------------------------
+  // * vec<T*>
+  // --------------------------------------------------------------------------------
 
   #ifdef __AVX__
     // we need vec<T * const,avx2_8> as well
@@ -1129,6 +1209,10 @@ namespace rts {
     // TODO: add left ptrdiff addition, and nullptr comparisons to vec<T,A>::pointer
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<T&>
+  // --------------------------------------------------------------------------------
+
   // overloaded reference type for references, as endorsed by the department of redundancy department
   template <class T, class A>
   struct vec<T&,A> {
@@ -1255,6 +1339,10 @@ namespace rts {
     }
   }
 
+  // --------------------------------------------------------------------------------
+  // * vec<complex>
+  // --------------------------------------------------------------------------------
+
   template <class T, class A>
   struct vec<std::complex<T>,A> {
     using arch = A;
@@ -1304,6 +1392,10 @@ namespace rts {
       std::swap(imag,that.imag);
     }
   };
+
+  // --------------------------------------------------------------------------------
+  // * vec<pair>
+  // --------------------------------------------------------------------------------
 
   template <class S, class T, class A>
   struct vec<std::pair<S,T>,A> {
@@ -1355,6 +1447,10 @@ namespace rts {
       std::swap(second,that.second);
     }
   };
+
+  // --------------------------------------------------------------------------------
+  // * vec<tuple>
+  // --------------------------------------------------------------------------------
 
   template <class A, class ... Ts>
   struct vec<std::tuple<Ts...>, A> {
@@ -1423,7 +1519,7 @@ namespace rts {
   }
 
   // -------------------------------------------------------------------------------
-  // template implementation details
+  // * vec template implementation details
   // -------------------------------------------------------------------------------
 
 #define RTS_OP(op) \
@@ -1441,7 +1537,8 @@ namespace rts {
 
 #undef RTS_OP
 
-#define RTS_BINOP(op) \
+#define RTS_BINOP(op) RTS_BINOP_LHS(op) RTS_BINOP_RHS(op)
+#define RTS_BINOP_LHS(op) \
   template <class T, class U, class A> \
   RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (const vec<T, A> & l, const vec<U,A> & r) noexcept(noexcept(vec<decltype(l.get(0) op r.get(0)), A>().put(0, l.get(0) op r.get(0)))) { \
     vec<decltype(l.get(0) op r.get(0)), A> result; \
@@ -1453,7 +1550,8 @@ namespace rts {
     vec<decltype(l.get(0) op r), A> result; \
     for (int i=0;i<A::width;++i) result.put(i, l.get(i) op r); \
     return result; \
-  } \
+  }
+#define RTS_BINOP_RHS(op) \
   template <class T, class U, class A> \
   RTS_ALWAYS_INLINE RTS_PURE constexpr auto operator op (T l, const vec<U, A> & r) noexcept(noexcept(vec<decltype(l op r.get(0)), A>().put(0, l op r.get(0)))) { \
     vec<decltype(l op r.get(0)), A> result; \
@@ -1462,10 +1560,11 @@ namespace rts {
   }
 
   RTS_BINOP(+)
-  RTS_BINOP(*)
   RTS_BINOP(-)
-  RTS_BINOP(<<)
-  RTS_BINOP(>>)
+  RTS_BINOP(*)
+  RTS_BINOP(/)
+  RTS_BINOP_LHS(<<)
+  RTS_BINOP_LHS(>>)
   RTS_BINOP(&)
   RTS_BINOP(|)
   RTS_BINOP(^)
@@ -1479,6 +1578,8 @@ namespace rts {
   RTS_BINOP(>=)
 
 #undef RTS_BINOP
+#undef RTS_BINOP_LHS
+#undef RTS_BINOP_RHS
 
   template <class S, class T, class A>
   S & operator << (S & os, const vec<T,A> & v) {
@@ -1747,9 +1848,13 @@ namespace rts {
   using std::get;
   using std::tuple_size;
   using std::tuple_element;
-}
+} // namespace rts
 
 namespace std {
+  // --------------------------------------------------------------------------------
+  // * std vec
+  // --------------------------------------------------------------------------------
+
   #define RTS_UNARY_MATH(fun) \
     template <class T, class A> \
     RTS_ALWAYS_INLINE RTS_MATH_PURE constexpr auto fun(const rts::vec<T,A> & v) RTS_MATH_NOEXCEPT { \
@@ -1851,6 +1956,10 @@ namespace std {
     static RTS_MATH_PURE constexpr rts::vec<T,A> infinity() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::infinity()); }
     static RTS_MATH_PURE constexpr rts::vec<T,A> quiet_NaN() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::quiet_NaN()); }
     static RTS_MATH_PURE constexpr rts::vec<T,A> signaling_NaN() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
-    static RTS_MATH_PURE constexpr rts::vec<T,A> denorm_min() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::signaling_NaN()); }
+    static RTS_MATH_PURE constexpr rts::vec<T,A> denorm_min() RTS_MATH_NOEXCEPT { return rts::vec<T,A>(base_limits::denorm_min()); }
   };
 } // namespace std
+
+#undef RTS_DEF_BINOP
+#undef RTS_DEF_SHIFT
+#undef RTS_DEF_SHIFT_FLOAT
