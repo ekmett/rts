@@ -24,32 +24,33 @@ template <class T, class A, class A1, class VAL> void require_eq (const vec<T,A>
 
 #define RTS_TEST0(fun,T) \
   SECTION(#fun " " #T) { \
-    require_eq( mm::fun<T,target::generic<8>>(), \
-                mm::fun<T,target::avx2_8>(), \
+    require_eq( mm::fun<T,Arch0>(), \
+                mm::fun<T,Arch1>(), \
                 "void"); \
   }
 #define RTS_TEST1(fun,T,val0) \
   SECTION(#fun " " #T) { \
-    require_eq( mm::fun(vec<T,target::generic<8>>(val0)), \
-                mm::fun(vec<T,target::avx2_8>(val0)), \
+    require_eq( mm::fun(vec<T,Arch0>(val0)), \
+                mm::fun(vec<T,Arch1>(val0)), \
                 #val0); \
   }
 #define RTS_TEST2(fun,T,val0,val1) \
   SECTION(#fun " " #T) { \
-    require_eq( mm::fun(vec<T,target::generic<8>>(val0), vec<T,target::generic<8>>(val1)), \
-                mm::fun(vec<T,target::avx2_8>(val0), vec<T,target::avx2_8>(val1)), \
+    require_eq( mm::fun(vec<T,Arch0>(val0), vec<T,Arch0>(val1)), \
+                mm::fun(vec<T,Arch1>(val0), vec<T,Arch1>(val1)), \
                 #val0 "," #val1 ); \
   }
 
 #define RTS_TEST2T(fun,T,T1,val0,val1) \
   SECTION(#fun " " #T "," #T1) { \
-    require_eq( mm::fun(vec<T,target::generic<8>>(val0), vec<T1,target::generic<8>>(val1)), \
-                mm::fun(vec<T,target::avx2_8>(val0), vec<T1,target::avx2_8>(val1)), \
+    require_eq( mm::fun(vec<T,Arch0>(val0), vec<T1,Arch0>(val1)), \
+                mm::fun(vec<T,Arch1>(val0), vec<T1,Arch1>(val1)), \
                 #val0 "," #val1 ); \
   }
 
 
-TEST_CASE("Validate generic against avx2_8", "[vec_intrinsics]") {
+template <class Arch0,class Arch1>
+void compare_arch () {
   using std::int32_t;
 
   SECTION("add"){
@@ -142,3 +143,11 @@ TEST_CASE("Validate generic against avx2_8", "[vec_intrinsics]") {
   }
 }
 
+TEST_CASE("Validate target generic against avx", "[vec_intrinsics]") {
+  #ifdef __AVX__
+    //compare_arch<target::generic<4>,target::avx_4>(); //TODO SIGABRTs
+  #endif // __AVX__
+  #ifdef __AVX2__
+    compare_arch<target::generic<8>,target::avx2_8>();
+  #endif // __AVX2__
+}
