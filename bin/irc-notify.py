@@ -69,6 +69,8 @@ else:
 
 while f:
     line = f.readline()
+    if line == "":
+        sys.exit()
     print("< {}".format(line.rstrip()))
     w = line.split()
     if len(w) >= 1 and w[0] == "PING":
