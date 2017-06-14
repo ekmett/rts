@@ -6,6 +6,8 @@
 #include "type.hpp"
 
 #include <cmath>
+#define RTS_M_PI 3.14159265358979323846
+#define RTS_M_E 2.71828182845904523536
 
 using namespace rts;
 
@@ -77,8 +79,8 @@ template <class A> void arch_test() {
       //RTS_TEST(log, 0 ); //FAIL -nanf == Approx( -inf )
       // from glibc [1]
       RTS_TEST(log, 1 );
-      RTS_TEST(log, M_E );
-      RTS_TEST(log, 1/M_E );
+      RTS_TEST(log, RTS_M_E );
+      RTS_TEST(log, 1/RTS_M_E );
       RTS_TEST(log, 2 );
       RTS_TEST(log, 10 );
       RTS_TEST(log, 0.75 );
@@ -198,18 +200,18 @@ template <class A> void arch_test() {
     SECTION( "sin" ) {
       // sanity
       RTS_TEST(sin, 0.0 );
-      RTS_TEST(sin, M_PI );
+      RTS_TEST(sin, RTS_M_PI );
       RTS_TEST(sin, 1.0 );
       RTS_TEST(sin, 4.0 );
       // from glibc [1]
       RTS_TEST(sin, 0 );
       RTS_TEST(sin, -0 );
-      RTS_TEST(sin, M_PI/6 );
-      RTS_TEST(sin, -M_PI/6 );
-      RTS_TEST(sin, M_PI/2 );
-      RTS_TEST(sin, -M_PI/2 );
-      RTS_TEST(sin, M_PI );
-      RTS_TEST(sin, -M_PI );
+      RTS_TEST(sin, RTS_M_PI/6 );
+      RTS_TEST(sin, -RTS_M_PI/6 );
+      RTS_TEST(sin, RTS_M_PI/2 );
+      RTS_TEST(sin, -RTS_M_PI/2 );
+      RTS_TEST(sin, RTS_M_PI );
+      RTS_TEST(sin, -RTS_M_PI );
       RTS_TEST(sin, 0.75 );
       //RTS_HEXFL(sin, 0x1p65 ); //FAIL -inff == Approx( -0.047183875 )
       //RTS_HEXFL(sin, -0x1p65 ); //FAIL inff == Approx( 0.047183875 )
@@ -262,15 +264,15 @@ template <class A> void arch_test() {
     SECTION( "cos" ) {
       // sanity
       RTS_TEST(sin, 0.0 );
-      RTS_TEST(sin, M_PI );
+      RTS_TEST(sin, RTS_M_PI );
       RTS_TEST(sin, 1.0 );
       RTS_TEST(sin, 4.0 );
       // from glibc [1]
       RTS_TEST(cos, 0 );
       RTS_TEST(cos, -0 );
-      RTS_TEST(cos, M_PI/3 );
-      RTS_TEST(cos, 2*M_PI/3 );
-      RTS_TEST(cos, M_PI/2 );
+      RTS_TEST(cos, RTS_M_PI/3 );
+      RTS_TEST(cos, 2*RTS_M_PI/3 );
+      RTS_TEST(cos, RTS_M_PI/2 );
       RTS_TEST(cos, 0.75 );
       //RTS_HEXFL(cos, 0x1p65 ); //FAIL -nanf == Approx( 0.9988862276 )
       //RTS_HEXFL(cos, -0x1p65 ); //FAIL -nanf == Approx( 0.9988862276 )
@@ -336,7 +338,7 @@ template <class A> void arch_test() {
     SECTION( "sincos" ) {
       // sanity
       RTS_TEST_SINCOS( 0.0 );
-      RTS_TEST_SINCOS( M_PI );
+      RTS_TEST_SINCOS( RTS_M_PI );
       RTS_TEST_SINCOS( 1.0 );
       RTS_TEST_SINCOS( 4.0 );
       // from glibc [1]
@@ -344,12 +346,12 @@ template <class A> void arch_test() {
       // from glibc - sin
       RTS_TEST_SINCOS( 0 );
       RTS_TEST_SINCOS( -0 );
-      RTS_TEST_SINCOS( M_PI/6 );
-      RTS_TEST_SINCOS( -M_PI/6 );
-      RTS_TEST_SINCOS( M_PI/2 );
-      RTS_TEST_SINCOS( -M_PI/2 );
-      RTS_TEST_SINCOS( M_PI );
-      RTS_TEST_SINCOS( -M_PI );
+      RTS_TEST_SINCOS( RTS_M_PI/6 );
+      RTS_TEST_SINCOS( -RTS_M_PI/6 );
+      RTS_TEST_SINCOS( RTS_M_PI/2 );
+      RTS_TEST_SINCOS( -RTS_M_PI/2 );
+      RTS_TEST_SINCOS( RTS_M_PI );
+      RTS_TEST_SINCOS( -RTS_M_PI );
       RTS_TEST_SINCOS( 0.75 );
       // ...
       RTS_TEST_SINCOS( 0.80190127184058835 );
@@ -386,9 +388,9 @@ template <class A> void arch_test() {
       // from glibc - cos
       RTS_TEST_SINCOS( 0 );
       RTS_TEST_SINCOS( -0 );
-      RTS_TEST_SINCOS( M_PI/3 );
-      RTS_TEST_SINCOS( 2*M_PI/3 );
-      RTS_TEST_SINCOS( M_PI/2 );
+      RTS_TEST_SINCOS( RTS_M_PI/3 );
+      RTS_TEST_SINCOS( 2*RTS_M_PI/3 );
+      RTS_TEST_SINCOS( RTS_M_PI/2 );
       RTS_TEST_SINCOS( 0.75 );
       // ...
       RTS_TEST_SINCOS( 0.80190127184058835 );
