@@ -233,7 +233,7 @@ namespace rts {
     RTS_ALWAYS_INLINE RTS_MATH_PURE rts::vec<R,A> cast (const rts::vec<U,A> & u) RTS_MATH_NOEXCEPT {
       rts::vec<R,A> result;
       for (int i=0;i<A::width;++i) {
-        union { R r; U u; } x = { .u = u[i] };
+        union { U u; R r; } x = { u[i] };
         result[i] = x.r;
       }
       return result;
