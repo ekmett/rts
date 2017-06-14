@@ -143,11 +143,18 @@ void compare_arch () {
   }
 }
 
-TEST_CASE("Validate target generic against avx", "[vec_intrinsics]") {
+TEST_CASE("Cross-check targets", "[vec_intrinsics]") {
+  SECTION("generic,generic") {
+    compare_arch<target::generic<8>,target::generic<8>>();
+  }
   #ifdef __AVX__
-    //compare_arch<target::generic<4>,target::avx_4>(); //TODO SIGABRTs
+  SECTION("generic,avx_4") {
+    compare_arch<target::generic<4>,target::avx_4>();
+  }
   #endif // __AVX__
   #ifdef __AVX2__
+  SECTION("generic,avx2_8") {
     compare_arch<target::generic<8>,target::avx2_8>();
+  }
   #endif // __AVX2__
 }
