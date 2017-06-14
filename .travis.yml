@@ -19,7 +19,7 @@ matrix:
  - os: linux
    compiler: g++
    dist: trusty
-   env: COMPILER=g++-6 BUILD_OPTIONS="-j 4" BUILD="make"
+   env: COMPILER=g++-6 CMAKE_OPTIONS="-DENABLE_AVX2:BOOL=OFF" BUILD_OPTIONS="-j 4" BUILD="make"
    addons:
     apt:
      packages:
@@ -34,7 +34,7 @@ matrix:
  - os: linux
    compiler: g++
    dist: trusty
-   env: COMPILER=g++-6 CMAKE_OPTIONS="-GNinja" BUILD="ninja"
+   env: COMPILER=g++-6 CMAKE_OPTIONS="-DENABLE_AVX2:BOOL=OFF -GNinja" BUILD="ninja"
    addons:
     apt:
      packages:
@@ -50,7 +50,7 @@ matrix:
  - os: linux
    compiler: clang++
    dist: trusty
-   env: COMPILER=clang++-4.0 CMAKE_OPTIONS="-DENABLE_DOCS:BOOL=OFF" BUILD_OPTIONS="-j 4"
+   env: COMPILER=clang++-4.0 CMAKE_OPTIONS="-DENABLE_AVX2:BOOL=OFF -DENABLE_DOCS:BOOL=OFF" BUILD_OPTIONS="-j 4"
    addons:
     apt:
      packages:
