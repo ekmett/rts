@@ -13,7 +13,7 @@ namespace mm = rts::vec_intrinsics;
 template <class T, class A, class A1, class VAL> void require_eq (const vec<T,A> & u, const vec<T,A1> & v, VAL val) {
   SECTION(val) {
     for (int i=0;i<A::width;++i) {
-      if( std::isnan(u[i]) && std::isnan(v[i]) ) {
+      if( std::isnan((long double)u[i]) && std::isnan((long double)v[i]) ) {
         REQUIRE( true );
       } else {
         REQUIRE( u[i] == v[i] );
