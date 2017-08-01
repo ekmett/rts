@@ -48,6 +48,20 @@ namespace rts {
     };
 
     #if defined(__AVX__)
+      struct avx_8 {
+        static const int width = 8;
+        static const std::uint32_t width_mask = 0xff;
+        static const int shift = 3;
+        static const std::uint32_t shift_mask = 7;
+        static const int alignment = 32;
+        static const bool allow_avx = true;
+        static const bool allow_avx2 = false;
+        static const bool allow_avx512 = false;
+        static RTS_CONST constexpr bool available(isa i) noexcept {
+          return i >= isa::avx && i <= isa::max_intel;
+        }
+      };
+
       struct avx_4 {
         static const int width = 4;
         static const std::uint32_t width_mask = 0xf;
@@ -99,7 +113,7 @@ namespace rts {
     #if defined(__AVX2__)
       using default_isa = avx2_8;
     #elif defined(__AVX__)
-      using default_isa = avx_4;
+      using default_isa = avx_8;
     #else
       using default_isa = generic<1>;
     #endif
@@ -465,6 +479,81 @@ namespace rts {
 
   #ifdef __AVX__
     template <>
+    struct vec<bool,target::avx_8> {
+      using arch = target::avx_8;
+      using value_type = bool;
+      using size_type = std::size_t;
+      using difference_type = std::ptrdiff_t;
+      using reference = detail::vref<value_type,arch>;
+      using const_reference = detail::const_vref<value_type,arch>;
+      using pointer = detail::vptr<value_type,arch>;
+      using const_pointer = detail::const_vptr<value_type,arch>;
+      using iterator = detail::vptr<value_type,arch>;
+      using const_iterator = detail::const_vptr<value_type,arch>;
+
+      union {
+        __m256i m;
+        std::int32_t d[8];
+      };
+
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0,0,0,0,0} {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & v) noexcept : m(v.m) {}
+      RTS_ALWAYS_INLINE vec(vec && v) noexcept = default;
+
+      RTS_ALWAYS_INLINE constexpr vec(std::false_type) noexcept : d{0,0,0,0,0,0,0,0} {}
+      RTS_ALWAYS_INLINE constexpr vec(std::true_type) noexcept : d{~0,~0,~0,~0,~0,~0,~0,~0} {}
+      RTS_ALWAYS_INLINE constexpr vec(bool b) noexcept :  d{b?~0:0,b?~0:0,b?~0:0,b?~0:0,b?~0:0,b?~0:0,b?~0:0,b?~0:0} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m) noexcept : m(m) {}
+      RTS_ALWAYS_INLINE constexpr vec(std::uint32_t m) noexcept : d{m&0x01u?~0:0,m&0x02u?~0:0,m&0x04u?~0:0,m&0x08u?~0:0,m&0x10u?~0:0,m&0x20u?~0:0,m&0x40u?~0:0,m&0x80u?~0:0} {}
+      RTS_ALWAYS_INLINE constexpr vec(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h) noexcept : d{a?~0:0,b?~0:0,c?~0:0,d?~0:0,e?~0:0,f?~0:0,g?~0:0,h?~0:0} {}
+
+      /*
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : m(_mm256_setzero_si256()) {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & v) noexcept : m(v.m) {}
+      RTS_ALWAYS_INLINE vec(vec && v) noexcept : m(std::move(v.m)) {}
+      RTS_ALWAYS_INLINE constexpr vec(std::false_type) noexcept : m(_mm256_setzero_si256()) {}
+      RTS_ALWAYS_INLINE constexpr vec(std::true_type) noexcept : m(_mm256_set1_epi32(~0)) {}
+      RTS_ALWAYS_INLINE constexpr vec(bool a) : m(_mm256_set1_epi32(a?~0:0)) {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128i m) noexcept : m(m) {}
+      RTS_ALWAYS_INLINE constexpr vec(std::uint32_t m) noexcept : d{m&0x01u?~0:0,m&0x02u?~0:0,m&0x04u?~0:0,m&0x08u?~0:0,m&0x10u?~0:0,m&0x20u?~0:0,m&0x40u?~0:0,m&0x80u?~0:0} {}
+      RTS_ALWAYS_INLINE constexpr vec(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h) noexcept : d{a?~0:0,b?~0:0,c?~0:0,d?~0:0,e?~0:0,f?~0:0,g?~0:0,h?~0:0} {}
+      */
+
+      template <class U>
+      RTS_ALWAYS_INLINE vec(const vec<U,target::avx_8> & rhs) : vec() {
+        for (int i=0;i<8;++i)
+          if (rhs.get(i))
+            reinterpret_cast<std::int32_t*>(&m)[i] = ~0;
+      }
+      #define RTS_APPLY_AS_PS(F,X,Y) _mm256_castps_si256( F (_mm256_castsi256_ps(X),_mm256_castsi256_ps(Y)))
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return iterator(this); }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return iterator(this+1); }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return const_iterator(this); }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return const_iterator(this+1); }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return const_iterator(this); }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return const_iterator(this+1); }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return begin()[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return cbegin()[i]; }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator ~ () const noexcept { return *this ^ vec(std::true_type()); }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator ! () const noexcept { return *this ^ vec(std::true_type()); }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator & (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_and_ps,m,rhs.m); } // constexpr, portable, and fast. pick 2
+      RTS_ALWAYS_INLINE RTS_PURE vec operator | (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_or_ps,m,rhs.m); }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator ^ (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_xor_ps,m,rhs.m); }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator && (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_xor_ps,m,rhs.m); }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator || (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_or_ps,m,rhs.m); }
+      RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept = default;
+      RTS_ALWAYS_INLINE vec & operator = (vec && rhs) noexcept = default;
+      RTS_ALWAYS_INLINE vec & operator &= (const vec & rhs) noexcept { m = RTS_APPLY_AS_PS(_mm256_and_ps,m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE vec & operator |= (const vec & rhs) noexcept { m = RTS_APPLY_AS_PS(_mm256_or_ps,m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE vec & operator ^= (const vec & rhs) noexcept { m = RTS_APPLY_AS_PS(_mm256_xor_ps,m,rhs.m); return *this; }
+      RTS_ALWAYS_INLINE RTS_PURE bool get(int i) noexcept { return movemask() & (1ul << i); } // would be constexpr, but how do we trick gcc/clang/msvc to generate a good movemask()?
+      RTS_ALWAYS_INLINE void put(int i, bool b) noexcept { reinterpret_cast<std::int32_t*>(&m)[i] = b?~0:0; }
+      RTS_ALWAYS_INLINE RTS_PURE std::uint32_t movemask() const noexcept { return _mm256_movemask_ps(_mm256_castsi256_ps(m)) ; } 
+
+    }; // vec<bool,avx_8>
+   
+   //TODO throw ths out
+   template <>
     struct vec<bool,target::avx_4> {
       using arch = target::avx_4;
       using value_type = bool;
@@ -660,6 +749,17 @@ namespace rts {
         m = fun(m,rhs.m); \
         return *this; \
       }
+
+#define RTS_DEF_BINOP2(op,fun) \
+      RTS_ALWAYS_INLINE RTS_PURE vec operator op (const vec & rhs) const noexcept { \
+        return vec(fun(n[0],rhs.n[0]),fun(n[1],rhs.n[1]), detail::internal_tag); \
+      } \
+      RTS_ALWAYS_INLINE vec & operator op##= (const vec & rhs) noexcept { \
+        n[0] = fun(n[0],rhs.n[0]); \
+        n[1] = fun(n[1],rhs.n[1]); \
+        return *this; \
+      }
+
 #define RTS_DEF_SHIFT(op,fun) \
       RTS_ALWAYS_INLINE RTS_PURE vec operator op (const int & rhs) const noexcept { \
         auto r = fun(m,rhs); \
@@ -679,8 +779,87 @@ namespace rts {
         return *this; \
       }
 
+    #ifdef __AVX__
+    template <>
+    struct vec<std::int32_t, target::avx_8> {
+      using arch = target::avx_8;
+      using size_type = std::size_t;
+      using difference_type = std::ptrdiff_t;
+      using value_type = std::int32_t;
+      using reference = value_type &;
+      using const_reference = const value_type &;
+      using pointer = value_type *;
+      using const_pointer = const value_type *;
+      using iterator = pointer;
+      using const_iterator = const value_type *;
 
-  #ifdef __AVX__
+      union {
+        __m256i m;
+        __m128i n[2];
+        std::int32_t d[8];
+      };
+
+
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0,0,0,0,0,0,0,0} {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & v) noexcept : m(v.m) {}
+      RTS_ALWAYS_INLINE vec(vec && v) noexcept = default;
+
+      RTS_ALWAYS_INLINE constexpr vec(std::int32_t b) noexcept :  d{b,b,b,b,b,b,b,b} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m) noexcept : m(m) {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256i m, detail::internal_t) noexcept : m(m) {}
+      RTS_ALWAYS_INLINE constexpr vec(__m128i a,__m128i b, detail::internal_t) noexcept : n{a,b} {}
+      RTS_ALWAYS_INLINE constexpr vec(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f, int32_t g, int32_t h) noexcept : d{a,b,c,d,e,f,g,h} {}
+
+
+
+      RTS_ALWAYS_INLINE RTS_CONST constexpr iterator begin() noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr iterator end() noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr reference operator [] (int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr reference get(int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE void put (int i, std::int32_t v) noexcept { d[i] = v; }
+
+      RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
+
+      RTS_DEF_BINOP2(+, _mm_add_epi32)
+      RTS_DEF_BINOP2(-, _mm_sub_epi32)
+      RTS_DEF_BINOP2(*, _mm_mullo_epi32)
+      //RTS_DEF_BINOP(/, _mm_div_epi32) // in SVML
+      RTS_ALWAYS_INLINE RTS_PURE vec operator & (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_and_ps,m,rhs.m); } // constexpr, portable, and fast. pick 2
+      RTS_ALWAYS_INLINE RTS_PURE vec operator | (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_or_ps,m,rhs.m); }
+      RTS_ALWAYS_INLINE RTS_PURE vec operator ^ (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_xor_ps,m,rhs.m); }
+      //RTS_DEF_SHIFT(<<, _mm_slli_epi32)
+      //RTS_DEF_SHIFT(>>, _mm_srli_epi32)
+
+      RTS_ALWAYS_INLINE vec & operator ++ () noexcept {
+        for (auto && r : d) ++r;
+        return *this;
+      }
+
+      RTS_ALWAYS_INLINE vec operator ++ (int) noexcept {
+        vec t(*this);
+        operator++();
+        return t;
+      }
+
+      RTS_ALWAYS_INLINE vec & operator -- () noexcept {
+        for (auto && r : d) --r;
+        return *this;
+      }
+
+      RTS_ALWAYS_INLINE vec operator -- (int) noexcept {
+        vec t(*this);
+        operator--();
+        return t;
+      }
+    };
+
+    //TODO remove this
     template <>
     struct vec<std::int32_t, target::avx_4> {
       using arch = target::avx_4;
@@ -835,7 +1014,58 @@ namespace rts {
   // * vec<float>
   // --------------------------------------------------------------------------------
 
-  #ifdef __AVX__
+    #ifdef __AVX__
+    template <>
+    struct vec<float, target::avx_8> {
+      using arch = target::avx_8;
+      using value_type = float;
+      using size_type = std::size_t;
+      using difference_type = std::ptrdiff_t;
+      using reference = value_type &;
+      using const_reference = const value_type &;
+      using pointer = value_type *;
+      using const_pointer = const value_type *;
+      using iterator = pointer;
+      using const_iterator = const value_type *;
+
+      union {
+        __m256 m;
+        float d[8];
+      };
+
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : d{0.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f} {}
+      RTS_ALWAYS_INLINE constexpr vec(float f) noexcept : d{f,f,f,f,f,f,f,f} {}
+      RTS_ALWAYS_INLINE constexpr vec(__m256 m, detail::internal_t) noexcept : m(m) {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(rhs.m) {}
+      RTS_ALWAYS_INLINE constexpr vec(float a, float b, float c, float d, float e, float f, float g, float h) noexcept : d{a,b,c,d,e,f,g,h} {}
+      RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(rhs.m)) {}
+
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference get(int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE void put (int i, float v) noexcept { d[i] = v; }
+      RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
+
+      RTS_DEF_BINOP(+, _mm256_add_ps)
+      RTS_DEF_BINOP(-, _mm256_sub_ps)
+      RTS_DEF_BINOP(*, _mm256_mul_ps)
+      RTS_DEF_BINOP(/, _mm256_div_ps)
+      // RTS_DEF_BINOP(&, _mm_and_si128)
+      // RTS_DEF_BINOP(|, _mm_or_si128)
+      // RTS_DEF_BINOP(^, _mm_xor_si128)
+      // RTS_DEF_SHIFT_FLOAT(<<, _mm_slli_epi32, _mm, 128)
+      // RTS_DEF_SHIFT_FLOAT(>>, _mm_srli_epi32, _mm, 128)
+
+    };
+
+    //todo remove this
     template <>
     struct vec<float, target::avx_4> {
       using arch = target::avx_4;
@@ -886,7 +1116,6 @@ namespace rts {
 
     };
   #endif
-
   #ifdef __AVX2__
     template <>
     struct vec<float, target::avx2_8> {
