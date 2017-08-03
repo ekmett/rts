@@ -151,6 +151,9 @@ TEST_CASE("Cross-check targets", "[vec_intrinsics]") {
   SECTION("generic,avx_4") {
     compare_arch<target::generic<4>,target::avx_4>();
   }
+  SECTION("generic,avx_8") {
+    compare_arch<target::generic<8>,target::avx_8>();
+  }
   #endif // __AVX__
   #ifdef __AVX2__
   SECTION("generic,avx2_8") {

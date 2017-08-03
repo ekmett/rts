@@ -25,6 +25,7 @@ TEST_CASE("soa", "[soa]") {
   arch_test<target::generic<1>>();
 #ifdef __AVX__
   arch_test<target::avx_4>();
+  arch_test<target::avx_8>();
 #endif
 #ifdef __AVX2__
   arch_test<target::avx2_8>();
