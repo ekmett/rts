@@ -114,6 +114,9 @@ else()
 endif()
 
 # use avx or not
+if (ENABLE_NATIVE)
+    add_compile_options("-march=native")
+else()
 OPTION(ENABLE_AVX "-mavx or -mno-avx" ON)
 if (ENABLE_AVX)
   if(MSVC)
@@ -154,6 +157,7 @@ else()
     endif()
   endif()
 endif()
+endif() # no native
 
 # use RTM
 OPTION(ENABLE_MRTM "-mrtm or -mno-rtm" OFF)
