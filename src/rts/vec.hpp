@@ -113,7 +113,7 @@ namespace rts {
     #if defined(__AVX2__)
       using default_isa = avx2_8;
     #elif defined(__AVX__)
-      using default_isa = avx_8;
+      using default_isa = avx_4;
     #else
       using default_isa = generic<1>;
     #endif
@@ -552,7 +552,6 @@ namespace rts {
 
     }; // vec<bool,avx_8>
    
-   //TODO throw ths out
    template <>
     struct vec<bool,target::avx_4> {
       using arch = target::avx_4;
@@ -769,6 +768,17 @@ namespace rts {
         m = fun(m,rhs); \
         return *this; \
       }
+#define RTS_DEF_SHIFT2(op,fun) \
+      RTS_ALWAYS_INLINE RTS_PURE vec operator op (const int & rhs) const noexcept { \
+        auto r0 = fun(n[0],rhs); \
+        auto r1 = fun(n[1],rhs); \
+        return vec(r0,r1, detail::internal_tag); \
+      } \
+      RTS_ALWAYS_INLINE vec & operator op##= (const int & rhs) noexcept { \
+        n[0] = fun(n[0],rhs); \
+        n[1] = fun(n[1],rhs); \
+        return *this; \
+      }
 #define RTS_DEF_SHIFT_FLOAT(op, fun, mm, bits) \
       RTS_ALWAYS_INLINE RTS_PURE vec operator op (const int & rhs) const noexcept { \
         auto r =  mm##_castsi##bits##_ps(fun(mm##_castps_si##bits(m),rhs)); \
@@ -833,8 +843,8 @@ namespace rts {
       RTS_ALWAYS_INLINE RTS_PURE vec operator & (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_and_ps,m,rhs.m); } // constexpr, portable, and fast. pick 2
       RTS_ALWAYS_INLINE RTS_PURE vec operator | (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_or_ps,m,rhs.m); }
       RTS_ALWAYS_INLINE RTS_PURE vec operator ^ (const vec & rhs) const noexcept { return RTS_APPLY_AS_PS(_mm256_xor_ps,m,rhs.m); }
-      //RTS_DEF_SHIFT(<<, _mm_slli_epi32)
-      //RTS_DEF_SHIFT(>>, _mm_srli_epi32)
+      RTS_DEF_SHIFT2(<<, _mm_slli_epi32)
+      RTS_DEF_SHIFT2(>>, _mm_srli_epi32)
 
       RTS_ALWAYS_INLINE vec & operator ++ () noexcept {
         for (auto && r : d) ++r;
@@ -859,7 +869,6 @@ namespace rts {
       }
     };
 
-    //TODO remove this
     template <>
     struct vec<std::int32_t, target::avx_4> {
       using arch = target::avx_4;
@@ -1065,7 +1074,6 @@ namespace rts {
 
     };
 
-    //todo remove this
     template <>
     struct vec<float, target::avx_4> {
       using arch = target::avx_4;
@@ -1176,6 +1184,47 @@ namespace rts {
   // --------------------------------------------------------------------------------
 
   #ifdef __AVX__
+
+    template <class T>
+    struct vec<T*,target::avx_8> {
+      using arch = target::avx_8;
+      using value_type = T*;
+      using reference = T*&;
+      using const_reference = T* const &;
+      using pointer = T**;
+      using const_pointer = const T**;
+      using iterator = pointer;
+      using const_iterator = const T**;
+
+      union {
+        #ifdef RTS_64
+          __m256i m[2]; // we need two registers
+        #else
+          __m256i m;
+        #endif
+        T * d[8];
+      };
+
+      RTS_ALWAYS_INLINE constexpr vec() noexcept : d{nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr} {}
+      RTS_ALWAYS_INLINE constexpr vec(std::nullptr_t) noexcept : d{nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr} {}
+      RTS_ALWAYS_INLINE constexpr vec(T * a) noexcept : d(a,a,a,a) {}
+      RTS_ALWAYS_INLINE constexpr vec(const vec & rhs) noexcept : m(d.m) {}
+      RTS_ALWAYS_INLINE vec(vec && rhs) noexcept : m(std::move(d.m)) {}
+
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator begin() noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR iterator end() noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator begin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator end() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cbegin() const noexcept { return d; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_iterator cend() const noexcept { return d + arch::width; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference operator [] (int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference operator [] (int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST RTS_MUTABLE_CONSTEXPR reference get(int i) noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE RTS_CONST constexpr const_reference get(int i) const noexcept { return d[i]; }
+      RTS_ALWAYS_INLINE void put(int i, T * p) noexcept { d[i] = p; }
+      RTS_ALWAYS_INLINE vec & operator = (const vec & rhs) noexcept { m = rhs.m; return *this; }
+    };
+
     // we need vec<T * const,avx2_8> as well
     template <class T>
     struct vec<T*,target::avx_4> {
@@ -2190,5 +2239,7 @@ namespace std {
 } // namespace std
 
 #undef RTS_DEF_BINOP
+#undef RTS_DEF_BINOP2
 #undef RTS_DEF_SHIFT
+#undef RTS_DEF_SHIFT2
 #undef RTS_DEF_SHIFT_FLOAT
