@@ -41,11 +41,22 @@ namespace rts {
 
     #define RTS_128(name,fun,U) RTS_128_2(name,fun,U,U)
     #define RTS_256(name,fun,U) RTS_256_2(name,fun,U,U)
+    #define RTS_256x(name,fun,U) RTS_256x_2(name,fun,U,U)
 
     #define RTS_128_1(name,fun,U) RTS_M_1(name,fun(u.m),U,target::avx_4)
     #define RTS_128_2(name,fun,U,V) RTS_M_2(name,fun(u.m,v.m),U,V,target::avx_4)
     #define RTS_128_3(name,fun,U,V,W) RTS_M_3(name,fun(u.m,v.m,w.m),U,V,W,target::avx_4)
 
+    // avx_8
+    #define RTS_256x_1(name,fun,U) RTS_M_1(name,fun(u.m),U,target::avx_8)
+    #define RTS_256x_2(name,fun,U,V) RTS_M_2(name,fun(u.m,v.m),U,V,target::avx_8)
+    #define RTS_256x_3(name,fun,U,V,W) RTS_M_3(name,fun(u.m,v.m,w.m),U,V,W,target::avx_8)
+
+    #define RTS_2x128_1(name,fun,U) RTS_M_1(name,fun(u.m),U,target::avx_8)
+    #define RTS_2x128_2(name,fun,U,V) RTS_M_2(name,fun(u.m,v.m),U,V,target::avx_8)
+    #define RTS_2x128_3(name,fun,U,V,W) RTS_M_3(name,fun(u.m,v.m,w.m),U,V,W,target::avx_8)
+
+    // avx2_8
     #define RTS_256_1(name,fun,U) RTS_M_1(name,fun(u.m),U,target::avx2_8)
     #define RTS_256_2(name,fun,U,V) RTS_M_2(name,fun(u.m,v.m),U,V,target::avx2_8)
     #define RTS_256_3(name,fun,U,V,W) RTS_M_3(name,fun(u.m,v.m,w.m),U,V,W,target::avx2_8)
@@ -92,6 +103,18 @@ namespace rts {
       template <> RTS_128(add,_mm_add_epi32,std::int32_t)
       template <> RTS_128(sub,_mm_sub_epi32,std::int32_t)
       template <> RTS_128(mul,_mm_mullo_epi32,std::int32_t)
+
+      //  __AVX__: add_ps sub_ps mul_ps div_ps
+      template <> RTS_256x(add,_mm256_add_ps,float)
+      template <> RTS_256x(sub,_mm256_sub_ps,float)
+      template <> RTS_256x(mul,_mm256_mul_ps,float)
+      template <> RTS_256x(div,_mm256_div_ps,float)
+      //  __AVX2__: add_epi32 sub_epi32 mullo_epi32
+      // we take implementation from + operator
+      //template <> RTS_256x(add,_mm256_add_epi32,std::int32_t)
+      //template <> RTS_256x(sub,_mm256_sub_epi32,std::int32_t)
+      //template <> RTS_256x(mul,_mm256_mullo_epi32,std::int32_t)
+
     #endif // __AVX__
     #ifdef __AVX2__
       //  __AVX__: add_ps sub_ps mul_ps div_ps
@@ -111,6 +134,7 @@ namespace rts {
     template <class T, class A> RTS_STMT_3(fmadd, result[i] = u[i] * v[i] + w[i], T,T,T)
     #ifdef __FMA__
       template <> RTS_128_3(fmadd,_mm_fmadd_ps,float,float,float)
+      template <> RTS_256x_3(fmadd,_mm256_fmadd_ps,float,float,float)
       template <> RTS_256_3(fmadd,_mm256_fmadd_ps,float,float,float)
     #endif // __FMA__
 
@@ -156,6 +180,17 @@ namespace rts {
       template <> RTS_128(and_,_mm_and_si128,std::int32_t)
       template <> RTS_128(xor_,_mm_xor_si128,std::int32_t)
       template <> RTS_128(or_,_mm_or_si128,std::int32_t)
+
+      // __AVX__: andnot_ps and_ps xor_ps or_ps
+      template <> RTS_256x(andnot,_mm256_andnot_ps,float)
+      template <> RTS_256x(and_,_mm256_and_ps,float)
+      template <> RTS_256x(xor_,_mm256_xor_ps,float)
+      template <> RTS_256x(or_,_mm256_or_ps,float)
+      // not avilable (should we use coerce)
+      //template <> RTS_256x(andnot,_mm256_andnot_si256,std::int32_t)
+      //template <> RTS_256x(and_,_mm256_and_si256,std::int32_t)
+      //template <> RTS_256x(xor_,_mm256_xor_si256,std::int32_t)
+      //template <> RTS_256x(or_,_mm256_or_si256,std::int32_t)
     #endif // __AVX__
     #ifdef __AVX2__
       // __AVX__: andnot_ps and_ps xor_ps or_ps
@@ -200,6 +235,18 @@ namespace rts {
       template <> RTS_M_2(and_,_mm_and_si128(u.m,_mm_castps_si128(v.m)),std::int32_t,float,target::avx_4)
       template <> RTS_M_2(xor_,_mm_xor_si128(u.m,_mm_castps_si128(v.m)),std::int32_t,float,target::avx_4)
       template <> RTS_M_2(or_,_mm_or_si128(u.m,_mm_castps_si128(v.m)),std::int32_t,float,target::avx_4)
+
+      //avx8
+      // float,int
+      template <> RTS_M_2(andnot,_mm256_andnot_ps(u.m,_mm256_castsi256_ps(v.m)),float,std::int32_t,target::avx_8)
+      template <> RTS_M_2(and_,_mm256_and_ps(u.m,_mm256_castsi256_ps(v.m)),float,std::int32_t,target::avx_8)
+      template <> RTS_M_2(xor_,_mm256_xor_ps(u.m,_mm256_castsi256_ps(v.m)),float,std::int32_t,target::avx_8)
+      template <> RTS_M_2(or_,_mm256_or_ps(u.m,_mm256_castsi256_ps(v.m)),float,std::int32_t,target::avx_8)
+      // int,float 
+      template <> RTS_M_2(andnot,_mm256_castps_si256(_mm256_andnot_ps(_mm256_castsi256_ps(u.m),v.m)),std::int32_t,float,target::avx_8)
+      template <> RTS_M_2(and_,_mm256_castps_si256(_mm256_and_ps(_mm256_castsi256_ps(u.m),v.m)),std::int32_t,float,target::avx_8)
+      template <> RTS_M_2(xor_,_mm256_castps_si256(_mm256_xor_ps(_mm256_castsi256_ps(u.m),v.m)),std::int32_t,float,target::avx_8)
+      template <> RTS_M_2(or_,_mm256_castps_si256(_mm256_or_ps(_mm256_castsi256_ps(u.m),v.m)),std::int32_t,float,target::avx_8)
     #endif // __AVX__
     #ifdef __AVX2__
       // float,int
@@ -220,6 +267,7 @@ namespace rts {
     template <class T, class A> RTS_STMT_1(floor,result[i] = std::floor(u[i]),T)
     #ifdef __AVX__
       template <> RTS_128_1(floor,_mm_floor_ps,float)
+      template <> RTS_256x_1(floor,_mm256_floor_ps,float)
     #endif // __AVX__
     #ifdef __AVX2__
       // __AVX__: floor
@@ -241,6 +289,9 @@ namespace rts {
     #ifdef __AVX__
       template<> RTS_M_1R(cast,_mm_castps_si128(u.m),float,target::avx_4,std::int32_t)
       template<> RTS_M_1R(cast,_mm_castsi128_ps(u.m),std::int32_t,target::avx_4,float)
+
+      template<> RTS_M_1R(cast,_mm256_castps_si256(u.m),float,target::avx_8,std::int32_t)
+      template<> RTS_M_1R(cast,_mm256_castsi256_ps(u.m),std::int32_t,target::avx_8,float)
     #endif // __AVX__
     #ifdef __AVX2__
       // __AVX__: cast*
@@ -261,6 +312,9 @@ namespace rts {
     #ifdef __AVX__
       template<> RTS_M_1R(cvt,_mm_cvttps_epi32(u.m),float,target::avx_4,std::int32_t)
       template<> RTS_M_1R(cvt,_mm_cvtepi32_ps(u.m),std::int32_t,target::avx_4,float)
+
+      template<> RTS_M_1R(cvt,_mm256_cvttps_epi32(u.m),float,target::avx_8,std::int32_t)
+      template<> RTS_M_1R(cvt,_mm256_cvtepi32_ps(u.m),std::int32_t,target::avx_8,float)
     #endif // __AVX__
     #ifdef __AVX2__
       template<> RTS_M_1R(cvt,_mm256_cvttps_epi32(u.m),float,target::avx2_8,std::int32_t)
@@ -320,6 +374,8 @@ namespace rts {
     }
     #ifdef __AVX__
       template <int imm8> RTS_M_2(cmp,_mm_cmp_ps(u.m,v.m,imm8),float,float,target::avx_4)
+      template <int imm8> RTS_M_2(cmp,_mm256_cmp_ps(u.m,v.m,imm8),float,float,target::avx_8)
+
     #endif // __AVX__
     #ifdef __AVX2__
       // __AVX__: cmp_ps
@@ -350,6 +406,9 @@ namespace rts {
     #ifdef __AVX__
       template <> RTS_M_0(setzero,_mm_setzero_ps(),float,target::avx_4)
       template <> RTS_M_0(setzero,_mm_setzero_si128(),std::int32_t,target::avx_4)
+
+      template <> RTS_M_0(setzero,_mm256_setzero_ps(),float,target::avx_8)
+      template <> RTS_M_0(setzero,_mm256_setzero_si256(),std::int32_t,target::avx_8)
     #endif // __AVX__
     #ifdef __AVX2__
       template <> RTS_M_0(setzero,_mm256_setzero_ps(),float,target::avx2_8)
@@ -376,6 +435,10 @@ namespace rts {
 #undef RTS_256_1
 #undef RTS_256_2
 #undef RTS_256_3
+#undef RTS_256x
+#undef RTS_256x_1
+#undef RTS_256x_2
+#undef RTS_256x_3
 #undef RTS_M_0
 #undef RTS_M_1
 #undef RTS_M_2
