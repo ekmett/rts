@@ -447,6 +447,7 @@ TEST_CASE("Validate rts::vec_math::foo against std::foo", "[vec_math]") {
   arch_test<target::generic<2>>();
 #ifdef __AVX__
   arch_test<target::avx_4>();
+  arch_test<target::avx_8>();
 #endif
 #ifdef __AVX2__
   arch_test<target::avx2_8>();
